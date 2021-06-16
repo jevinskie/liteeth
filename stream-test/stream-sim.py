@@ -169,8 +169,8 @@ class BenchSoC(SoCCore):
         self.submodules.icmp = LiteEthICMP(self.ip, etherbone_ip_address, dw=8)
         self.submodules.udp = LiteEthUDP(self.ip, etherbone_ip_address, dw=8)
 
-        # udp_port = self.udp.crossbar.get_port(1234, dw=8)
-        # self.submodules.streamer = Streamer(self.platform.request("streamer"), udp_port)
+        udp_port = self.udp.crossbar.get_port(1234, dw=8)
+        self.submodules.streamer = Streamer(self.platform.request("streamer"), udp_port)
 
         if sim_debug:
             platform.add_debug(self, reset=1 if trace_reset_on else 0)
