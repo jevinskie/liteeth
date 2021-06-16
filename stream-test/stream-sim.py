@@ -24,13 +24,15 @@ from liteeth.phy.model import LiteEthPHYModel
 from liteeth.mac import LiteEthMAC
 from liteeth.core.arp import LiteEthARP
 from liteeth.core.ip import LiteEthIP
-from liteeth.core.icmp import LiteEthICMP
 from liteeth.core.udp import LiteEthUDP
+from liteeth.core.icmp import LiteEthICMP
+from liteeth.core import LiteEthUDPIPCore
+from liteeth.frontend.etherbone import LiteEthEtherbone
 from liteeth.frontend.stream import LiteEthStream2UDPTX
 from liteeth.common import convert_ip
 
 etherbone_mac_address = 0x10e2d5000001
-etherbone_ip_address = convert_ip('192.168.100.50')
+g_etherbone_ip_address = '192.168.100.50'
 
 class Streamer(Module):
     def __init__(self, pads, udp_port):
@@ -153,18 +155,41 @@ class BenchSoC(SoCCore):
         self.submodules.crg = CRG(platform.request("sys_clk"))
 
         # Etherbone --------------------------------------------------------------------------------
-        self.submodules.ethphy = LiteEthPHYModel(self.platform.request("eth"))
-        self.add_csr("ethphy")
+        # self.submodules.ethphy = LiteEthPHYModel(self.platform.request("eth", 0))
+        # self.add_csr("ethphy")
         # self.add_etherbone(phy=self.ethphy, buffer_depth=255)
+        etherbone_ip_address = convert_ip(g_etherbone_ip_address)
+        # Ethernet PHY
+        self.submodules.ethphy = LiteEthPHYModel(self.platform.request("eth", 0))
+        # Ethernet MAC
         self.submodules.ethmac = LiteEthMAC(phy=self.ethphy, dw=8,
-                                            interface="hybrid")
+                                            interface="hybrid",
+                                            endianness=self.cpu.endianness,
+                                            hw_mac=etherbone_mac_address)
+
+        # SoftCPU
+        # self.add_memory_region("ethmac", self.mem_map.get("ethmac", None), 0x2000, type="io")
+        # self.add_wb_slave(self.mem_regions["ethmac"].origin, self.ethmac.bus, 0x2000)
+        if self.irq.enabled:
+            self.irq.add("ethmac", use_loc_if_exists=True)
+        # HW ethernet
         self.submodules.arp = LiteEthARP(self.ethmac, etherbone_mac_address, etherbone_ip_address, sys_clk_freq, dw=8)
         self.submodules.ip = LiteEthIP(self.ethmac, etherbone_mac_address, etherbone_ip_address, self.arp.table, dw=8)
         self.submodules.icmp = LiteEthICMP(self.ip, etherbone_ip_address, dw=8)
         self.submodules.udp = LiteEthUDP(self.ip, etherbone_ip_address, dw=8)
-
-        udp_port = self.udp.crossbar.get_port(1234, dw=8)
-        self.submodules.streamer = Streamer(self.platform.request("streamer"), udp_port)
+        # Etherbone
+        self.submodules.etherbone = LiteEthEtherbone(self.udp, 1234, mode="master")
+        self.add_wb_master(self.etherbone.wishbone.bus)
+        # self.submodules.ethmac = LiteEthMAC(phy=self.ethphy, dw=8,
+        #                                     interface="hybrid")
+        # self.submodules.arp = LiteEthARP(self.ethmac, etherbone_mac_address, etherbone_ip_address, sys_clk_freq, dw=8)
+        # self.submodules.ip = LiteEthIP(self.ethmac, etherbone_mac_address, etherbone_ip_address, self.arp.table, dw=8)
+        # self.submodules.icmp = LiteEthICMP(self.ip, etherbone_ip_address, dw=8)
+        # self.submodules.udp = LiteEthUDP(self.ip, etherbone_ip_address, dw=8)
+        # self.submodules.etherbone = LiteEthEtherbone(self.udp, 1234, mode="master")
+        # self.add_wb_master(self.etherbone.wishbone.bus)
+        # udp_port = self.udp.crossbar.get_port(1234, dw=8)
+        # self.submodules.streamer = Streamer(self.platform.request("streamer"), udp_port)
 
         if sim_debug:
             platform.add_debug(self, reset=1 if trace_reset_on else 0)
