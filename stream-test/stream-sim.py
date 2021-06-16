@@ -21,11 +21,11 @@ from litex.soc.integration.builder import *
 
 from liteeth.phy.model import LiteEthPHYModel
 
-class Blinker(Module):
-    def __init__(self, sys_clk_freq, period):
-        self.led = led = Signal()
-        self.data = data = Signal(64)
-        self.valid = valid = Signal()
+class Streamer(Module):
+    def __init__(self, pads):
+        # self.led = led = Signal()
+        # self.data = data = Signal(64)
+        # self.valid = valid = Signal()
 
         # # #
 
@@ -34,15 +34,15 @@ class Blinker(Module):
         counter = Signal(max=counter_preload + 1)
 
         self.comb += toggle.eq(counter == 0)
-        self.comb += valid.eq(toggle)
+        self.comb += pads.valid.eq(toggle)
         self.sync += \
         If(toggle,
-            led.eq(~led),
+            pads.led.eq(~pads.led),
             counter.eq(counter_preload)
         ).Else(
             counter.eq(counter - 1)
         )
-        self.sync += data.eq(data + 1)
+        self.sync += pads.data.eq(pads.data + 1)
 
 # class Counter(Module):
 #     def __init__(self, nbits):
@@ -113,7 +113,7 @@ class BenchSoC(SoCCore):
         self.comb += platform.trace.eq(1)
 
         # create a 10Hz blinker
-        self.submodules.streamer = Blinker(sys_clk_freq=sys_clk_freq, period=10e-1)
+        self.submodules.streamer = Streamer(self.platform.request("streamer"))
 
         # CRG --------------------------------------------------------------------------------------
         self.submodules.crg = CRG(platform.request("sys_clk"))
