@@ -18,16 +18,55 @@ from litex.build.sim.config import SimConfig
 
 from litex.soc.integration.soc_core import *
 from litex.soc.integration.builder import *
+from litex.soc.interconnect import stream
 
 from liteeth.phy.model import LiteEthPHYModel
+from liteeth.mac import LiteEthMAC
+from liteeth.core.arp import LiteEthARP
+from liteeth.core.ip import LiteEthIP
+from liteeth.core.icmp import LiteEthICMP
+from liteeth.core.udp import LiteEthUDP
+from liteeth.frontend.stream import LiteEthStream2UDPTX
+from liteeth.common import convert_ip
+
+etherbone_mac_address = 0x10e2d5000001
+etherbone_ip_address = convert_ip('192.168.100.50')
 
 class Streamer(Module):
-    def __init__(self, pads):
+    def __init__(self, pads, udp_port):
         # self.led = led = Signal()
         # self.data = data = Signal(64)
         # self.valid = valid = Signal()
 
+        self.submodules.streamer_conv = stream.Converter(pads.data.nbits, 8)
+
+        # UDP Streamer
+        # ------------
+        udp_streamer   = LiteEthStream2UDPTX(
+            ip_address = convert_ip("192.168.100.100"),
+            udp_port   = 1234,
+            fifo_depth = 8,
+            send_level = 8
+        )
+
+        self.source = stream.Endpoint([("data", pads.data.nbits)])
+        self.sink = None
+
         # # #
+
+        self.submodules.udp_cdc      = stream.ClockDomainCrossing([("data", 8)], "sys", "eth_rx")
+        self.submodules.udp_streamer = ClockDomainsRenamer("eth_rx")(udp_streamer)
+
+        # DMA -> UDP Pipeline
+        # -------------------
+        self.submodules += stream.Pipeline(
+            self.source,
+            self.streamer_conv,
+            self.udp_cdc,
+            self.udp_streamer,
+            udp_port,
+        )
+
 
         toggle = Signal()
         counter_preload = 15
@@ -100,7 +139,7 @@ class Platform(SimPlatform):
 # Bench SoC ----------------------------------------------------------------------------------------
 
 class BenchSoC(SoCCore):
-    def __init__(self, **kwargs):
+    def __init__(self, sim_debug=False, trace_reset_on=False, **kwargs):
         platform     = Platform()
         sys_clk_freq = int(1e6)
 
@@ -110,11 +149,6 @@ class BenchSoC(SoCCore):
             ident_version  = True
         )
 
-        self.comb += platform.trace.eq(1)
-
-        # create a 10Hz blinker
-        self.submodules.streamer = Streamer(self.platform.request("streamer"))
-
         # CRG --------------------------------------------------------------------------------------
         self.submodules.crg = CRG(platform.request("sys_clk"))
 
@@ -122,6 +156,20 @@ class BenchSoC(SoCCore):
         self.submodules.ethphy = LiteEthPHYModel(self.platform.request("eth"))
         self.add_csr("ethphy")
         # self.add_etherbone(phy=self.ethphy, buffer_depth=255)
+        self.submodules.ethmac = LiteEthMAC(phy=self.ethphy, dw=8,
+                                            interface="hybrid")
+        self.submodules.arp = LiteEthARP(self.ethmac, etherbone_mac_address, etherbone_ip_address, sys_clk_freq, dw=8)
+        self.submodules.ip = LiteEthIP(self.ethmac, etherbone_mac_address, etherbone_ip_address, self.arp.table, dw=8)
+        self.submodules.icmp = LiteEthICMP(self.ip, etherbone_ip_address, dw=8)
+        self.submodules.udp = LiteEthUDP(self.ip, etherbone_ip_address, dw=8)
+
+        udp_port = self.udp.crossbar.get_port(1234, dw=8)
+        self.submodules.streamer = Streamer(self.platform.request("streamer"), udp_port)
+
+        if sim_debug:
+            platform.add_debug(self, reset=1 if trace_reset_on else 0)
+        else:
+            self.comb += platform.trace.eq(1)
 
         # SRAM -------------------------------------------------------------------------------------
         # self.add_ram("sram", 0x20000000, 0x1000)
@@ -134,6 +182,7 @@ def main():
     parser.add_argument("--trace-fst",            action="store_true",     help="Enable FST tracing (default=VCD)")
     parser.add_argument("--trace-start",          default="0",             help="Time to start tracing (ps)")
     parser.add_argument("--trace-end",            default="-1",            help="Time to end tracing (ps)")
+    parser.add_argument("--sim-debug",            action="store_true",     help="Add simulation debugging modules")
     args = parser.parse_args()
     try:
         args.trace_start = int(args.trace_start)
@@ -148,7 +197,7 @@ def main():
     sim_config.add_clocker("sys_clk", freq_hz=1e6)
     sim_config.add_module("ethernet", "eth", args={"interface": "tap0", "ip": "192.168.100.100"})
 
-    soc     = BenchSoC()
+    soc     = BenchSoC(sim_debug=args.sim_debug, trace_reset_on=args.trace_start > 0 or args.trace_end > 0)
     builder = Builder(soc, csr_csv="csr.csv")
     builder.build(
         sim_config  = sim_config,
