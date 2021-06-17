@@ -44,25 +44,24 @@ class Streamer(Module):
 
         # UDP Streamer
         # ------------
-        udp_streamer   = LiteEthStream2UDPTX(
+        self.submodules.udp_streamer   = LiteEthStream2UDPTX(
             ip_address = convert_ip("192.168.100.100"),
             udp_port   = 1234,
-            fifo_depth = 8,
-            send_level = 8
         )
 
+        # self.source = self
         self.source = stream.Endpoint([("data", pads.data.nbits)])
-        self.sink = None
+        # self.sink = None
 
         # # #
 
         self.submodules.udp_cdc      = stream.ClockDomainCrossing([("data", 8)], "sys", "eth_rx")
-        self.submodules.udp_streamer = ClockDomainsRenamer("eth_rx")(udp_streamer)
+        self.submodules.udp_streamer = ClockDomainsRenamer("eth_rx")(self.udp_streamer)
 
         # DMA -> UDP Pipeline
         # -------------------
         self.submodules += stream.Pipeline(
-            self.source,
+            self,
             self.streamer_conv,
             self.udp_cdc,
             self.udp_streamer,
@@ -84,6 +83,9 @@ class Streamer(Module):
             counter.eq(counter - 1)
         )
         self.sync += pads.data.eq(pads.data + 1)
+
+        self.comb += self.source.data.eq(pads.data)
+        self.comb += self.source.valid.eq(pads.valid)
 
 # class Counter(Module):
 #     def __init__(self, nbits):
