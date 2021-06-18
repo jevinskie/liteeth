@@ -157,6 +157,9 @@ class BenchSoC(SoCCore):
         self.submodules.crg = CRG(platform.request("sys_clk"))
 
         etherbone_ip_address = convert_ip(g_etherbone_ip_address)
+        print(f'etherbone_ip_address: {etherbone_ip_address}')
+        print(f'etherbone_mac_address: {etherbone_mac_address}')
+
         # Ethernet PHY
         self.submodules.ethphy = LiteEthPHYModel(self.platform.request("eth", 0))
         # Ethernet MAC
