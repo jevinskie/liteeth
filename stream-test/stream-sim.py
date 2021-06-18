@@ -55,19 +55,30 @@ class Streamer(Module):
 
         # # #
 
-        self.submodules.udp_cdc      = stream.ClockDomainCrossing([("data", 8)], "sys", "eth_rx")
+        self.submodules.udp_cdc      = stream.ClockDomainCrossing([("data", 8)], "sys", "eth_tx")
         self.submodules.udp_streamer = ClockDomainsRenamer("eth_rx")(self.udp_streamer)
+
+        self.comb += self.source.connect(self.udp_cdc.sink)
+        self.comb += self.udp_cdc.source.connect(self.udp_streamer.sink)
+        self.comb += self.udp_streamer.source.connect(udp_port.sink)
 
         # DMA -> UDP Pipeline
         # -------------------
-        self.submodules += stream.Pipeline(
-            self,
-            self.streamer_conv,
-            self.udp_cdc,
-            self.udp_streamer,
-            udp_port,
-        )
+        # self.submodules += stream.Pipeline(
+        #     self,
+        #     self.streamer_conv,
+        #     self.udp_cdc,
+        #     self.udp_streamer,
+        #     udp_port,
+        # )
 
+        # self.submodules += stream.Pipeline(
+        #     self,
+        #     self.streamer_conv,
+        #     self.udp_cdc,
+        #     self.udp_streamer,
+        #     udp_port,
+        # )
 
         toggle = Signal()
         counter_preload = 15
@@ -175,7 +186,7 @@ class BenchSoC(SoCCore):
         self.submodules.udp = LiteEthUDP(self.ip, etherbone_ip_address, dw=8)
 
         udp_port = self.udp.crossbar.get_port(1234, dw=8)
-        # self.submodules.streamer = Streamer(self.platform.request("streamer"), udp_port)
+        self.submodules.streamer = Streamer(self.platform.request("streamer"), udp_port)
 
         if sim_debug:
             platform.add_debug(self, reset=1 if trace_reset_on else 0)
