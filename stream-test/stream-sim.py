@@ -37,6 +37,7 @@ g_etherbone_ip_address = '192.168.100.50'
 class Streamer(Module):
     def __init__(self, pads, udp_port):
         self.source = stream.Endpoint([("data", 8)])
+        counter = Signal(64)
 
         # UDP Streamer
         # ------------
@@ -56,9 +57,22 @@ class Streamer(Module):
             udp_port
         )
 
-        self.comb += pads.valid.eq(1)
+        toggle = Signal()
+        counter_preload = 2**32-1
+        counter = Signal(max=counter_preload + 1)
+
+        self.comb += toggle.eq(counter == 0)
+        self.comb += pads.valid.eq(toggle)
+        self.sync += \
+        If(toggle,
+            counter.eq(counter_preload)
+        ).Else(
+            counter.eq(counter - 1)
+        )
+        # self.sync += pads.data.eq(pads.data + 1)
+
         self.comb += pads.data.eq(0xAA)
-        # self.comb += self.source.valid.eq(pads.valid)
+        self.comb += self.source.valid.eq(pads.valid)
         self.comb += self.source.data.eq(pads.data)
 
 # IOs ----------------------------------------------------------------------------------------------
