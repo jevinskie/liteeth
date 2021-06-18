@@ -59,7 +59,8 @@ class Streamer(Module):
 
         toggle = Signal()
         counter_preload = 2**32-1
-        counter = Signal(max=counter_preload + 1)
+        # counter = Signal(max=counter_preload + 1, reset=counter_preload)
+        counter = Signal(max=counter_preload + 1, reset=counter_preload)
 
         self.comb += toggle.eq(counter == 0)
         self.comb += pads.valid.eq(toggle)
