@@ -59,7 +59,7 @@ class Streamer(Module):
         self.comb += pads.valid.eq(1)
         self.comb += pads.data.eq(0xAA)
         # self.comb += self.source.valid.eq(pads.valid)
-        # self.comb += self.source.data.eq(pads.data)
+        self.comb += self.source.data.eq(pads.data)
 
 # IOs ----------------------------------------------------------------------------------------------
 
