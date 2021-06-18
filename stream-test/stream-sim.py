@@ -36,89 +36,26 @@ g_etherbone_ip_address = '192.168.100.50'
 
 class Streamer(Module):
     def __init__(self, pads, udp_port):
-        # self.led = led = Signal()
-        # self.data = data = Signal(64)
-        # self.valid = valid = Signal()
-
-        self.submodules.streamer_conv = stream.Converter(pads.data.nbits, 8)
+        # self.submodules.stream_source = stream.Endpoint([("data", 8)])
+        self.source = stream.Endpoint([("data", 8)])
 
         # UDP Streamer
         # ------------
-        self.submodules.udp_streamer   = LiteEthStream2UDPTX(
+        udp_streamer   = LiteEthStream2UDPTX(
             ip_address = convert_ip("192.168.100.100"),
             udp_port   = 1234,
         )
-
-        # self.source = self
-        self.source = stream.Endpoint([("data", pads.data.nbits)])
-        # self.sink = None
-
-        # # #
-
-        self.submodules.udp_cdc      = stream.ClockDomainCrossing([("data", 8)], "sys", "eth_tx")
-        self.submodules.udp_streamer = ClockDomainsRenamer("eth_rx")(self.udp_streamer)
-
-        self.comb += self.source.connect(self.udp_cdc.sink)
-        self.comb += self.udp_cdc.source.connect(self.udp_streamer.sink)
-        self.comb += self.udp_streamer.source.connect(udp_port.sink)
+        self.submodules.udp_cdc      = stream.ClockDomainCrossing([("data", 8)], "sys", "eth_rx")
+        self.submodules.udp_streamer = ClockDomainsRenamer("eth_rx")(udp_streamer)
 
         # DMA -> UDP Pipeline
         # -------------------
-        # self.submodules += stream.Pipeline(
-        #     self,
-        #     self.streamer_conv,
-        #     self.udp_cdc,
-        #     self.udp_streamer,
-        #     udp_port,
-        # )
-
-        # self.submodules += stream.Pipeline(
-        #     self,
-        #     self.streamer_conv,
-        #     self.udp_cdc,
-        #     self.udp_streamer,
-        #     udp_port,
-        # )
-
-        toggle = Signal()
-        counter_preload = 15
-        counter = Signal(max=counter_preload + 1)
-
-        self.comb += toggle.eq(counter == 0)
-        self.comb += pads.valid.eq(toggle)
-        self.sync += \
-        If(toggle,
-            pads.led.eq(~pads.led),
-            counter.eq(counter_preload)
-        ).Else(
-            counter.eq(counter - 1)
+        self.submodules += stream.Pipeline(
+            self,
+            self.udp_cdc,
+            self.udp_streamer,
+            udp_port
         )
-        self.sync += pads.data.eq(pads.data + 1)
-
-        self.comb += self.source.data.eq(pads.data)
-        self.comb += self.source.valid.eq(pads.valid)
-
-# class Counter(Module):
-#     def __init__(self, nbits):
-#         self.led = led = Signal()
-
-#         # # #
-
-#         toggle = Signal()
-#         counter_preload = int(sys_clk_freq*period/2)
-#         counter = Signal(max=counter_preload + 1)
-
-#         self.comb += toggle.eq(counter == 0)
-#         self.sync += \
-#         If(toggle,
-#             led.eq(~led),
-#             counter.eq(counter_preload)
-#         ).Else(
-#             counter.eq(counter - 1)
-#         )
-
-# create a 10Hz blinker from a 1 MHz system clock
-# blinker = Blinker(sys_clk_freq=1e6, period=100e-1)
 
 # IOs ----------------------------------------------------------------------------------------------
 
