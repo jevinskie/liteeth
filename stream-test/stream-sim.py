@@ -164,7 +164,7 @@ class BenchSoC(SoCCore):
         self.submodules.ethphy = LiteEthPHYModel(self.platform.request("eth", 0))
         # Ethernet MAC
         self.submodules.ethmac = LiteEthMAC(phy=self.ethphy, dw=8,
-                                            interface="hybrid",
+                                            interface="crossbar",
                                             endianness=self.cpu.endianness,
                                             hw_mac=etherbone_mac_address)
 
@@ -174,7 +174,7 @@ class BenchSoC(SoCCore):
         self.submodules.icmp = LiteEthICMP(self.ip, etherbone_ip_address, dw=8)
         self.submodules.udp = LiteEthUDP(self.ip, etherbone_ip_address, dw=8)
 
-        # udp_port = self.udp.crossbar.get_port(1234, dw=8)
+        udp_port = self.udp.crossbar.get_port(1234, dw=8)
         # self.submodules.streamer = Streamer(self.platform.request("streamer"), udp_port)
 
         if sim_debug:
