@@ -36,7 +36,6 @@ g_etherbone_ip_address = '192.168.100.50'
 
 class Streamer(Module):
     def __init__(self, pads, udp_port):
-        # self.submodules.stream_source = stream.Endpoint([("data", 8)])
         self.source = stream.Endpoint([("data", 8)])
 
         # UDP Streamer
@@ -57,6 +56,11 @@ class Streamer(Module):
             udp_port
         )
 
+        self.comb += pads.valid.eq(1)
+        self.comb += pads.data.eq(0xAA)
+        # self.comb += self.source.valid.eq(pads.valid)
+        # self.comb += self.source.data.eq(pads.data)
+
 # IOs ----------------------------------------------------------------------------------------------
 
 _io = [
@@ -76,9 +80,8 @@ _io = [
         Subsignal("sink_data",    Pins(8)),
     ),
     ("streamer", 0,
-        Subsignal("led", Pins(1)),
         Subsignal("valid", Pins(1)),
-        Subsignal("data", Pins(64)),
+        Subsignal("data", Pins(8)),
     ),
 ]
 
