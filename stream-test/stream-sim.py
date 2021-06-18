@@ -37,8 +37,8 @@ g_etherbone_ip_address = '192.168.100.50'
 class Streamer(Module):
     def __init__(self, pads, udp_port):
         self.source = stream.Endpoint([("data", 8)])
-        counter = Signal(64)
-
+        self.submodules.streamer_conv = stream.Converter(pads.data.nbits, 8)
+        
         # UDP Streamer
         # ------------
         udp_streamer   = LiteEthStream2UDPTX(
@@ -52,27 +52,28 @@ class Streamer(Module):
         # -------------------
         self.submodules += stream.Pipeline(
             self,
+            self.streamer_conv,
             self.udp_cdc,
             self.udp_streamer,
             udp_port
         )
 
         toggle = Signal()
-        counter_preload = 2**32-1
+        counter_preload = 2**8-1
         # counter = Signal(max=counter_preload + 1, reset=counter_preload)
-        counter = Signal(max=counter_preload + 1, reset=counter_preload)
+        streamer_counter = Signal(max=counter_preload + 1, reset=counter_preload)
 
-        self.comb += toggle.eq(counter == 0)
+        self.comb += toggle.eq(streamer_counter == 0)
         self.comb += pads.valid.eq(toggle)
         self.sync += \
         If(toggle,
-            counter.eq(counter_preload)
+            streamer_counter.eq(counter_preload)
         ).Else(
-            counter.eq(counter - 1)
+            streamer_counter.eq(streamer_counter - 1)
         )
         # self.sync += pads.data.eq(pads.data + 1)
 
-        self.comb += pads.data.eq(0xAA)
+        self.comb += pads.data.eq(0xAABBCCDD11223344)
         self.comb += self.source.valid.eq(pads.valid)
         self.comb += self.source.data.eq(pads.data)
 
@@ -96,7 +97,7 @@ _io = [
     ),
     ("streamer", 0,
         Subsignal("valid", Pins(1)),
-        Subsignal("data", Pins(8)),
+        Subsignal("data", Pins(64)),
     ),
 ]
 
