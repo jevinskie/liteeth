@@ -43,7 +43,7 @@ class Streamer(Module):
         print(f'target_ip: {target_ip}')
         # UDP Streamer
         # ------------
-        payload_len = ((1500 - 42) // 8) * 8
+        payload_len = ((1500 - 42) // (pads.data.nbits / 8)) * 8
         udp_streamer   = LiteEthStream2UDPTX(
             ip_address = target_ip,
             udp_port   = 1234,
