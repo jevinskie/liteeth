@@ -46,8 +46,8 @@ class Streamer(Module):
         udp_streamer   = LiteEthStream2UDPTX(
             ip_address = target_ip,
             udp_port   = 1234,
-            fifo_depth = 8,
-            send_level = 8,
+            fifo_depth = 1400,
+            send_level = 1400,
         )
         self.submodules.udp_cdc      = stream.ClockDomainCrossing([("data", 8)], "sys", "eth_tx")
         self.submodules.udp_streamer = ClockDomainsRenamer("eth_tx")(udp_streamer)
@@ -63,7 +63,7 @@ class Streamer(Module):
         )
 
         toggle = Signal()
-        counter_preload = 2**14-1 - 243
+        counter_preload = 2**8-1 - 243
         # counter = Signal(max=counter_preload + 1, reset=counter_preload)
         streamer_counter = Signal(max=counter_preload + 1, reset=counter_preload)
 
