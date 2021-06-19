@@ -15,20 +15,21 @@ streamer_source_mac_address = 0x10e2d5000001
 streamer_source_ip_address = '192.168.100.50'
 streamer_target_ip_address = '192.168.100.100'
 streamer_port = 1234
+streamer_max_packet_size = 1500 - 42
 
 class Streamer(Module):
-    def __init__(self, target_ip: str, target_port: int, udp_port, nbits: int=64):
+    def __init__(self, sys_clk_freq: int, target_ip: str, target_port: int, udp_port, bitrate: int = 15_000_000, nbits: int=64):
         assert nbits % 8 == 0 and nbits > 0
         self.source = stream.Endpoint([("data", nbits)])
         self.submodules.streamer_conv = stream.Converter(nbits, 8)
 
         # UDP Streamer
         # ------------
-        payload_len = ((1500 - 42) // (nbits // 8)) * 8
+        payload_len = (streamer_max_packet_size // (nbits // 8)) * 8
         udp_streamer   = LiteEthStream2UDPTX(
             ip_address = convert_ip(target_ip),
             udp_port   = target_port,
-            fifo_depth = payload_len,
+            fifo_depth = payload_len*3,
             send_level = payload_len,
         )
         self.submodules.udp_cdc      = stream.ClockDomainCrossing([("data", 8)], "sys", "eth_tx")
@@ -47,9 +48,12 @@ class Streamer(Module):
         valid = Signal()
         running_counter = Signal(nbits)
         toggle = Signal()
-        counter_preload = 2**8-1 - 243
+        # counter_preload = 2**8-1 - 243
+        period = 1 / (bitrate / 8 / payload_len)
+        counter_preload = int(sys_clk_freq*period/2)
+        print(f'bitrate: {bitrate} period: {period} counter_preload: {counter_preload}')
         # counter = Signal(max=counter_preload + 1, reset=counter_preload)
-        streamer_counter = Signal(max=counter_preload + 1, reset=counter_preload)
+        streamer_counter = Signal(max=counter_preload + 1)
 
         self.comb += toggle.eq(streamer_counter == 0)
         self.comb += valid.eq(toggle)
