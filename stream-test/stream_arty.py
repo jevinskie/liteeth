@@ -21,6 +21,15 @@ from litex.soc.integration.soc_core import *
 from litex.soc.integration.builder import *
 
 from liteeth.phy.mii import LiteEthPHYMII
+from liteeth.mac import LiteEthMAC
+from liteeth.core.arp import LiteEthARP
+from liteeth.core.ip import LiteEthIP
+from liteeth.core.udp import LiteEthUDP
+from liteeth.core.icmp import LiteEthICMP
+from liteeth.core import LiteEthUDPIPCore
+from liteeth.common import convert_ip
+
+from stream_common import *
 
 # Bench SoC ----------------------------------------------------------------------------------------
 
@@ -42,6 +51,22 @@ class BenchSoC(SoCCore):
             clock_pads = self.platform.request("eth_clocks"),
             pads       = self.platform.request("eth"),
             with_hw_init_reset = False)
+
+        # Ethernet MAC
+        self.submodules.ethmac = LiteEthMAC(phy=self.ethphy, dw=8,
+                                            interface="crossbar",
+                                            endianness=self.cpu.endianness,
+                                            hw_mac=streamer_source_mac_address)
+
+        source_ip_int: int = convert_ip(streamer_source_ip_address)
+        # HW ethernet
+        self.submodules.arp = LiteEthARP(self.ethmac, streamer_source_mac_address, source_ip_int, sys_clk_freq, dw=8)
+        self.submodules.ip = LiteEthIP(self.ethmac, streamer_source_mac_address, source_ip_int, self.arp.table, dw=8)
+        self.submodules.icmp = LiteEthICMP(self.ip, source_ip_int, dw=8)
+        self.submodules.udp = LiteEthUDP(self.ip, source_ip_int, dw=8)
+
+        udp_port = self.udp.crossbar.get_port(streamer_port, dw=8)
+        self.submodules.streamer = Streamer(self.platform.request("streamer"), streamer_target_ip_address, streamer_port, udp_port)
 
         # Leds -------------------------------------------------------------------------------------
         from litex.soc.cores.led import LedChaser
