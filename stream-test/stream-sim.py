@@ -37,6 +37,7 @@ g_etherbone_ip_address = '192.168.100.50'
 class Streamer(Module):
     def __init__(self, pads, udp_port):
         self.source = stream.Endpoint([("data", 8)])
+        self.submodules.streamer_conv = stream.Converter(pads.data.nbits, 8)
         
         target_ip = convert_ip("192.168.100.100")
         print(f'target_ip: {target_ip}')
@@ -53,6 +54,7 @@ class Streamer(Module):
         # -------------------
         self.submodules += stream.Pipeline(
             self,
+            self.streamer_conv,
             self.udp_cdc,
             self.udp_streamer,
             udp_port
@@ -71,9 +73,10 @@ class Streamer(Module):
         ).Else(
             streamer_counter.eq(streamer_counter - 1)
         )
-        # self.sync += pads.data.eq(pads.data + 1)
 
-        self.comb += pads.data.eq(0x55)
+        self.sync += pads.data.eq(pads.data + 1)
+        # self.comb += pads.data.eq(0x55)
+
         self.comb += self.source.valid.eq(pads.valid)
         self.comb += self.source.data.eq(pads.data)
 
@@ -97,7 +100,7 @@ _io = [
     ),
     ("streamer", 0,
         Subsignal("valid", Pins(1)),
-        Subsignal("data", Pins(8)),
+        Subsignal("data", Pins(64)),
     ),
 ]
 
