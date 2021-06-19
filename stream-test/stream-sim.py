@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-#!/usr/bin/env python3
-
 #
 # This file is part of LiteEth.
 #
@@ -31,22 +29,22 @@ from liteeth.frontend.etherbone import LiteEthEtherbone
 from liteeth.frontend.stream import LiteEthStream2UDPTX
 from liteeth.common import convert_ip
 
-etherbone_mac_address = 0x10e2d5000001
-g_etherbone_ip_address = '192.168.100.50'
+streamer_source_mac_address = 0x10e2d5000001
+streamer_source_ip_address = '192.168.100.50'
+streamer_target_ip_address = '192.168.100.100'
+streamer_port = 1234
 
 class Streamer(Module):
-    def __init__(self, pads, udp_port):
+    def __init__(self, pads, target_ip: str, target_port: int, udp_port):
         self.source = stream.Endpoint([("data", pads.data.nbits)])
         self.submodules.streamer_conv = stream.Converter(pads.data.nbits, 8)
         
-        target_ip = convert_ip("192.168.100.100")
-        print(f'target_ip: {target_ip}')
         # UDP Streamer
         # ------------
-        payload_len = ((1500 - 42) // (pads.data.nbits / 8)) * 8
+        payload_len = ((1500 - 42) // (pads.data.nbits // 8)) * 8
         udp_streamer   = LiteEthStream2UDPTX(
-            ip_address = target_ip,
-            udp_port   = 1234,
+            ip_address = convert_ip(target_ip),
+            udp_port   = target_port,
             fifo_depth = payload_len,
             send_level = payload_len,
         )
@@ -129,26 +127,23 @@ class BenchSoC(SoCCore):
         # CRG --------------------------------------------------------------------------------------
         self.submodules.crg = CRG(platform.request("sys_clk"))
 
-        etherbone_ip_address = convert_ip(g_etherbone_ip_address)
-        print(f'etherbone_ip_address: {etherbone_ip_address}')
-        print(f'etherbone_mac_address: {etherbone_mac_address}')
-
         # Ethernet PHY
         self.submodules.ethphy = LiteEthPHYModel(self.platform.request("eth", 0))
         # Ethernet MAC
         self.submodules.ethmac = LiteEthMAC(phy=self.ethphy, dw=8,
                                             interface="crossbar",
                                             endianness=self.cpu.endianness,
-                                            hw_mac=etherbone_mac_address)
+                                            hw_mac=streamer_source_mac_address)
 
+        source_ip_int: int = convert_ip(streamer_source_ip_address)
         # HW ethernet
-        self.submodules.arp = LiteEthARP(self.ethmac, etherbone_mac_address, etherbone_ip_address, sys_clk_freq, dw=8)
-        self.submodules.ip = LiteEthIP(self.ethmac, etherbone_mac_address, etherbone_ip_address, self.arp.table, dw=8)
-        self.submodules.icmp = LiteEthICMP(self.ip, etherbone_ip_address, dw=8)
-        self.submodules.udp = LiteEthUDP(self.ip, etherbone_ip_address, dw=8)
+        self.submodules.arp = LiteEthARP(self.ethmac, streamer_source_mac_address, source_ip_int, sys_clk_freq, dw=8)
+        self.submodules.ip = LiteEthIP(self.ethmac, streamer_source_mac_address, source_ip_int, self.arp.table, dw=8)
+        self.submodules.icmp = LiteEthICMP(self.ip, source_ip_int, dw=8)
+        self.submodules.udp = LiteEthUDP(self.ip, source_ip_int, dw=8)
 
         udp_port = self.udp.crossbar.get_port(1234, dw=8)
-        self.submodules.streamer = Streamer(self.platform.request("streamer"), udp_port)
+        self.submodules.streamer = Streamer(self.platform.request("streamer"), streamer_target_ip_address, streamer_port, udp_port)
 
         if sim_debug:
             platform.add_debug(self, reset=1 if trace_reset_on else 0)
