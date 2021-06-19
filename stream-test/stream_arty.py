@@ -66,7 +66,7 @@ class BenchSoC(SoCCore):
         self.submodules.udp = LiteEthUDP(self.ip, source_ip_int, dw=8)
 
         udp_port = self.udp.crossbar.get_port(streamer_port, dw=8)
-        self.submodules.streamer = Streamer(sys_clk_freq, streamer_target_ip_address, streamer_port, udp_port)
+        self.submodules.streamer = Streamer(sys_clk_freq, streamer_target_ip_address, streamer_port, udp_port, bitrate=streamer_max_packet_size * 8 * 4)
 
         # Leds -------------------------------------------------------------------------------------
         from litex.soc.cores.led import LedChaser

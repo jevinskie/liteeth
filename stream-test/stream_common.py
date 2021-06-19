@@ -49,9 +49,12 @@ class Streamer(Module):
         running_counter = Signal(nbits)
         toggle = Signal()
         # counter_preload = 2**8-1 - 243
-        period = 1 / (bitrate / 8 / payload_len)
+        # period = 1 / (bitrate / 8 / payload_len)
+        period = 1 / (bitrate / nbits)
         counter_preload = int(sys_clk_freq*period/2)
         print(f'bitrate: {bitrate} period: {period} counter_preload: {counter_preload}')
+        calc_bitrate = (1 / period) * nbits
+        print(f'calc_bitrate: {calc_bitrate}')
         # counter = Signal(max=counter_preload + 1, reset=counter_preload)
         streamer_counter = Signal(max=counter_preload + 1)
 
