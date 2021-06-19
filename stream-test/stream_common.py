@@ -29,7 +29,7 @@ class Streamer(Module):
         udp_streamer   = LiteEthStream2UDPTX(
             ip_address = convert_ip(target_ip),
             udp_port   = target_port,
-            fifo_depth = payload_len*3,
+            fifo_depth = payload_len,
             send_level = payload_len,
         )
         self.submodules.udp_cdc      = stream.ClockDomainCrossing([("data", 8)], "sys", "eth_tx")
