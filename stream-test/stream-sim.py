@@ -63,7 +63,7 @@ class Streamer(Module):
         )
 
         toggle = Signal()
-        counter_preload = 2**17-1
+        counter_preload = 2**14-1 - 243
         # counter = Signal(max=counter_preload + 1, reset=counter_preload)
         streamer_counter = Signal(max=counter_preload + 1, reset=counter_preload)
 
