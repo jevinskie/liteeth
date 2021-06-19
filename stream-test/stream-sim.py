@@ -36,7 +36,7 @@ g_etherbone_ip_address = '192.168.100.50'
 
 class Streamer(Module):
     def __init__(self, pads, udp_port):
-        self.source = stream.Endpoint([("data", 8)])
+        self.source = stream.Endpoint([("data", pads.data.nbits)])
         self.submodules.streamer_conv = stream.Converter(pads.data.nbits, 8)
         
         target_ip = convert_ip("192.168.100.100")
