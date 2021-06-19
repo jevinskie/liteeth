@@ -72,11 +72,20 @@ class BenchSoC(SoCCore):
         self.add_jtagbone()
 
         # UARTbone ---------------------------------------------------------------------------------
-        self.add_uartbone()
+        self.add_uartbone(baudrate=3_000_000)
 
         # scope ------------------------------------------------------------------------------------
         from litescope import LiteScopeAnalyzer
-        analyzer_signals = [self.submodules.streamer]
+        analyzer_signals = [
+            self.streamer.source,
+            # self.streamer.streamer_conv,
+            # self.streamer.udp_streamer,
+            # self.streamer.pipeline,
+            self.streamer.valid,
+            self.streamer.running_counter,
+            self.streamer.toggle,
+            self.streamer.streamer_counter,
+        ]
         self.submodules.analyzer = LiteScopeAnalyzer(analyzer_signals,
                                                      depth=8192,
                                                      clock_domain="sys",

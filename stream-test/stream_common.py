@@ -37,7 +37,7 @@ class Streamer(Module):
 
         # DMA -> UDP Pipeline
         # -------------------
-        self.submodules += stream.Pipeline(
+        self.submodules.pipeline = stream.Pipeline(
             self,
             self.streamer_conv,
             self.udp_cdc,
@@ -45,9 +45,9 @@ class Streamer(Module):
             udp_port
         )
 
-        valid = Signal()
-        running_counter = Signal(nbits)
-        toggle = Signal()
+        self.valid = valid = Signal()
+        self.running_counter = running_counter = Signal(nbits)
+        self.toggle = toggle = Signal()
         # counter_preload = 2**8-1 - 243
         # period = 1 / (bitrate / 8 / payload_len)
         period = 1 / (bitrate / nbits)
@@ -56,7 +56,7 @@ class Streamer(Module):
         calc_bitrate = (1 / period) * nbits
         print(f'calc_bitrate: {calc_bitrate}')
         # counter = Signal(max=counter_preload + 1, reset=counter_preload)
-        streamer_counter = Signal(max=counter_preload + 1)
+        self.streamer_counter = streamer_counter = Signal(max=counter_preload + 1)
 
         self.comb += toggle.eq(streamer_counter == 0)
         self.comb += valid.eq(toggle)
