@@ -43,11 +43,12 @@ class Streamer(Module):
         print(f'target_ip: {target_ip}')
         # UDP Streamer
         # ------------
+        payload_len = ((1500 - 42) // 8) * 8
         udp_streamer   = LiteEthStream2UDPTX(
             ip_address = target_ip,
             udp_port   = 1234,
-            fifo_depth = 1400,
-            send_level = 1400,
+            fifo_depth = payload_len,
+            send_level = payload_len,
         )
         self.submodules.udp_cdc      = stream.ClockDomainCrossing([("data", 8)], "sys", "eth_tx")
         self.submodules.udp_streamer = ClockDomainsRenamer("eth_tx")(udp_streamer)
