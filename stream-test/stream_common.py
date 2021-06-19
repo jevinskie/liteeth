@@ -17,13 +17,14 @@ streamer_target_ip_address = '192.168.100.100'
 streamer_port = 1234
 
 class Streamer(Module):
-    def __init__(self, pads, target_ip: str, target_port: int, udp_port):
-        self.source = stream.Endpoint([("data", pads.data.nbits)])
-        self.submodules.streamer_conv = stream.Converter(pads.data.nbits, 8)
-        
+    def __init__(self, target_ip: str, target_port: int, udp_port, nbits: int=64):
+        assert nbits % 8 == 0 and nbits > 0
+        self.source = stream.Endpoint([("data", nbits)])
+        self.submodules.streamer_conv = stream.Converter(nbits, 8)
+
         # UDP Streamer
         # ------------
-        payload_len = ((1500 - 42) // (pads.data.nbits // 8)) * 8
+        payload_len = ((1500 - 42) // (nbits // 8)) * 8
         udp_streamer   = LiteEthStream2UDPTX(
             ip_address = convert_ip(target_ip),
             udp_port   = target_port,
@@ -43,13 +44,15 @@ class Streamer(Module):
             udp_port
         )
 
+        valid = Signal()
+        running_counter = Signal(nbits)
         toggle = Signal()
         counter_preload = 2**8-1 - 243
         # counter = Signal(max=counter_preload + 1, reset=counter_preload)
         streamer_counter = Signal(max=counter_preload + 1, reset=counter_preload)
 
         self.comb += toggle.eq(streamer_counter == 0)
-        self.comb += pads.valid.eq(toggle)
+        self.comb += valid.eq(toggle)
         self.sync += \
         If(toggle,
             streamer_counter.eq(counter_preload)
@@ -57,8 +60,7 @@ class Streamer(Module):
             streamer_counter.eq(streamer_counter - 1)
         )
 
-        self.sync += pads.data.eq(pads.data + 1)
-        # self.comb += pads.data.eq(0x55)
+        self.sync += running_counter.eq(running_counter + 1)
 
-        self.comb += self.source.valid.eq(pads.valid)
-        self.comb += self.source.data.eq(pads.data)
+        self.comb += self.source.valid.eq(valid)
+        self.comb += self.source.data.eq(running_counter)
