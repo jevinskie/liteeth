@@ -77,14 +77,15 @@ class BenchSoC(SoCCore):
         # scope ------------------------------------------------------------------------------------
         from litescope import LiteScopeAnalyzer
         analyzer_signals = [
-            self.streamer.source,
+            self.streamer.source.ready,
+            self.streamer.source.valid,
             # self.streamer.streamer_conv,
             # self.streamer.udp_streamer,
             # self.streamer.pipeline,
             self.streamer.valid,
-            self.streamer.running_counter,
+            # self.streamer.running_counter,
             self.streamer.toggle,
-            self.streamer.streamer_counter,
+            # self.streamer.streamer_counter,
         ]
         self.submodules.analyzer = LiteScopeAnalyzer(analyzer_signals,
                                                      depth=8192,
