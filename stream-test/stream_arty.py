@@ -58,8 +58,8 @@ class BenchSoC(SoCCore):
                                             endianness=self.cpu.endianness,
                                             hw_mac=streamer_source_mac_address)
 
-        source_ip_int: int = convert_ip(streamer_source_ip_address)
         # HW ethernet
+        source_ip_int: int = convert_ip(streamer_source_ip_address)
         self.submodules.arp = LiteEthARP(self.ethmac, streamer_source_mac_address, source_ip_int, sys_clk_freq, dw=8)
         self.submodules.ip = LiteEthIP(self.ethmac, streamer_source_mac_address, source_ip_int, self.arp.table, dw=8)
         self.submodules.icmp = LiteEthICMP(self.ip, source_ip_int, dw=8)
@@ -67,6 +67,12 @@ class BenchSoC(SoCCore):
 
         udp_port = self.udp.crossbar.get_port(streamer_port, dw=8)
         self.submodules.streamer = Streamer(sys_clk_freq, streamer_target_ip_address, streamer_port, udp_port, bitrate=streamer_max_packet_size * 8 * 4)
+
+        # JTAGbone ---------------------------------------------------------------------------------
+        self.add_jtagbone()
+
+        # UARTbone ---------------------------------------------------------------------------------
+        self.add_uart('uartbone')
 
         # Leds -------------------------------------------------------------------------------------
         from litex.soc.cores.led import LedChaser
