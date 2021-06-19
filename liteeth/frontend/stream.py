@@ -22,7 +22,10 @@ class LiteEthStream2UDPTX(Module):
                 source.last.eq(1),
                 source.length.eq(1),
                 source.data.eq(sink.data),
-                sink.ready.eq(source.ready)
+                sink.ready.eq(source.ready),
+                source.src_port.eq(udp_port),
+                source.dst_port.eq(udp_port),
+                source.ip_address.eq(ip_address),
             ]
         else:
             level   = Signal(max=fifo_depth+1)
