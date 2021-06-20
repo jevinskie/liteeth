@@ -15,7 +15,8 @@ streamer_source_mac_address = 0x10e2d5000001
 streamer_source_ip_address = '192.168.100.50'
 streamer_target_ip_address = '192.168.100.100'
 streamer_port = 1234
-streamer_max_packet_size = 1500 - 42
+# streamer_max_packet_size = 1500 - 42 # too much, overflows sometimes and i dunno why
+streamer_max_packet_size = 1024
 
 class Streamer(Module):
     def __init__(self, sys_clk_freq: int, target_ip: str, target_port: int, udp_port, bitrate: int = 15_000_000, nbits: int=64):
@@ -59,7 +60,7 @@ class Streamer(Module):
         self.streamer_counter = streamer_counter = Signal(max=counter_preload + 1)
 
         self.comb += toggle.eq(streamer_counter == 0)
-        self.comb += valid.eq(1)
+        self.comb += valid.eq(toggle)
         self.sync += \
         If(toggle,
             streamer_counter.eq(counter_preload)
@@ -67,10 +68,10 @@ class Streamer(Module):
             streamer_counter.eq(streamer_counter - 1)
         )
 
-        self.sync += \
-        If(self.source.ready,
-            running_counter.eq(running_counter + 1)
-        )
+        # self.sync += \
+        # If(self.source.ready,
+        #     running_counter.eq(running_counter + 1)
+        # )
 
         self.comb += self.source.valid.eq(valid)
         self.comb += self.source.data.eq(running_counter)
