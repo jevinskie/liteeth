@@ -52,7 +52,8 @@ class Streamer(Module):
         # counter_preload = 2**8-1 - 243
         # period = 1 / (bitrate / 8 / payload_len)
         period = 1 / (bitrate / nbits)
-        counter_preload = int(sys_clk_freq*period/2)
+        counter_preload = int(sys_clk_freq * period / 2)
+        # counter_preload = 2**16-1
         print(f'bitrate: {bitrate} period: {period} counter_preload: {counter_preload}')
         calc_bitrate = (1 / period) * nbits
         print(f'calc_bitrate: {calc_bitrate}')
@@ -60,7 +61,7 @@ class Streamer(Module):
         self.streamer_counter = streamer_counter = Signal(max=counter_preload + 1)
 
         self.comb += toggle.eq(streamer_counter == 0)
-        self.comb += valid.eq(toggle)
+        self.comb += valid.eq(1)
         self.sync += \
         If(toggle,
             streamer_counter.eq(counter_preload)
@@ -68,10 +69,10 @@ class Streamer(Module):
             streamer_counter.eq(streamer_counter - 1)
         )
 
-        # self.sync += \
-        # If(self.source.ready,
-        #     running_counter.eq(running_counter + 1)
-        # )
+        self.sync += \
+        If(self.source.ready,
+            running_counter.eq(running_counter + 1)
+        )
 
         self.comb += self.source.valid.eq(valid)
         self.comb += self.source.data.eq(running_counter)
