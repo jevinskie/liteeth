@@ -18,6 +18,24 @@ streamer_port = 1234
 # streamer_max_packet_size = 1500 - 42 # too much, overflows sometimes and i dunno why
 streamer_max_packet_size = 1024
 
+
+class TickerZeroToMax(Module):
+    def __init__(self, pads: Record, max_cnt: int):
+        self.counter = counter = Signal(max=max_cnt)
+        self.tick = tick = Signal()
+
+        self.comb += pads.tick.eq(tick)
+        self.comb += pads.counter.eq(counter)
+        self.sync += \
+            If(counter == max_cnt,
+               tick.eq(1),
+               counter.eq(0)
+            ).Else(
+                tick.eq(0),
+                counter.eq(counter + 1)
+            )
+
+
 class Streamer(Module):
     def __init__(self, sys_clk_freq: int, target_ip: str, target_port: int, udp_port, bitrate: int = 15_000_000, nbits: int=64):
         assert nbits % 8 == 0 and nbits > 0
