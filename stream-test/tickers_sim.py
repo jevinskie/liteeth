@@ -74,7 +74,7 @@ class BenchSoC(SoCCore):
         self.submodules.ticker_zero_to_max = TickerZeroToMax(self.platform.request("ticker_zero_to_max"), max_cnt=15)
         self.submodules.ticker_zero_to_max_from_freq = TickerZeroToMax.from_freq(self.platform.request("ticker_zero_to_max_from_freq"), sys_clk_freq=sys_clk_freq, ticker_freq=sys_clk_freq/16)
         bt_pads = self.platform.request("beat_ticker")
-        self.submodules.beat_ticker = BeatTickerZeroToMax(bt_pads, max_cnt_a=2**2-1, max_cnt_b=2**3-1)
+        self.submodules.beat_ticker = BeatTickerZeroToMax(bt_pads, max_cnt_a=2**3-3, max_cnt_b=2**4-9)
 
 
         if sim_debug:
