@@ -24,10 +24,28 @@ from stream_common import *
 _io = [
     ("sys_clk", 0, Pins(1)),
     ("sys_rst", 0, Pins(1)),
-    ("ticker", 0,
+    ("ticker_zero_to_max", 0,
         Subsignal("tick", Pins(1)),
         Subsignal("counter", Pins(32)),
     ),
+    ("ticker_zero_to_max_from_freq", 0,
+        Subsignal("tick", Pins(1)),
+        Subsignal("counter", Pins(32)),
+    ),
+    ("beat_ticker", 0,
+        Subsignal("tick", Pins(1)),
+        Subsignal("tick_a", Pins(1)),
+        Subsignal("counter_a", Pins(32)),
+        Subsignal("tick_b", Pins(1)),
+        Subsignal("counter_b", Pins(32)),
+     ),
+    # ("beat_ticker", 0,
+    #  Subsignal("tick", Pins(1)),
+    #  Subsignal("ticker_a", Pins(1)),
+    #  Subsignal("counter_a", Pins(32)),
+    #  Subsignal("tick_b", Pins(1)),
+    #  Subsignal("counter_b", Pins(32)),
+    #  ),
 ]
 
 # Platform -----------------------------------------------------------------------------------------
@@ -53,7 +71,11 @@ class BenchSoC(SoCCore):
         self.submodules.crg = CRG(platform.request("sys_clk"))
 
         # Ticker -----------------------------------------------------------------------------------
-        self.submodules.ticker = TickerZeroToMax(self.platform.request("ticker"), max_cnt=15)
+        self.submodules.ticker_zero_to_max = TickerZeroToMax(self.platform.request("ticker_zero_to_max"), max_cnt=15)
+        self.submodules.ticker_zero_to_max_from_freq = TickerZeroToMax.from_freq(self.platform.request("ticker_zero_to_max_from_freq"), sys_clk_freq=sys_clk_freq, ticker_freq=sys_clk_freq/16)
+        bt_pads = self.platform.request("beat_ticker")
+        self.submodules.beat_ticker = BeatTickerZeroToMax(bt_pads, max_cnt_a=2**2-1, max_cnt_b=2**3-1)
+
 
         if sim_debug:
             platform.add_debug(self, reset=1 if trace_reset_on else 0)
@@ -68,6 +90,8 @@ def main():
     parser.add_argument("--trace-fst",            action="store_true",     help="Enable FST tracing (default=VCD)")
     parser.add_argument("--trace-start",          default="0",             help="Time to start tracing (ps)")
     parser.add_argument("--trace-end",            default="-1",            help="Time to end tracing (ps)")
+    parser.add_argument("--trace-exit",           action="store_true",     help="End simulation once trace finishes")
+    parser.add_argument("--sim-end",              default="-1",            help="Time to end simulation (ps)")
     parser.add_argument("--sim-debug",            action="store_true",     help="Add simulation debugging modules")
     args = parser.parse_args()
     try:
@@ -89,7 +113,9 @@ def main():
         trace       = args.trace,
         trace_fst   = args.trace_fst,
         trace_start = args.trace_start,
-        trace_end   = args.trace_end
+        trace_end   = args.trace_end,
+        trace_exit  = args.trace_exit,
+        sim_end     = args.sim_end
     )
 
 if __name__ == "__main__":
