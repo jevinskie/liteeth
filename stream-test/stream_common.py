@@ -48,38 +48,22 @@ class TickerZeroToMax(Module):
     def from_freq(cls, pads: Record, sys_clk_freq: int, ticker_freq: int) -> TickerZeroToMax:
         return cls.from_period(pads, sys_clk_freq, 1 / ticker_freq)
 
+
 class BeatTickerZeroToMax(Module):
     def __init__(self, pads: Record, max_cnt_a: int, max_cnt_b: int):
         self.tick = tick = Signal()
 
-        # pads_a = Record([
-        #     ("tick", 1, ,
-        #         pads.tick_a,
-        #         pads.counter_a,
-        #     ),
-        # ])
-        # pads_a = Record([
-        #     ("tick",    pads.tick_a.nbits),
-        #     ("counter", pads.counter_a.nbits),
-        # ], "ticker_a")
         pads_a = Record([
             ("tick", pads.tick_a),
             ("counter", pads.counter_a),
         ], "ticker_a")
         self.submodules.ticker_a = TickerZeroToMax(pads_a, max_cnt_a)
-        # self.submodules.ticker_a = TickerZeroToMax(pads.ticker_a, max_cnt_a)
 
-        # pads_b = Record([
-        #     ("tick",    pads.tick_b.nbits),
-        #     ("counter", pads.counter_b.nbits),
-        # ], "ticker_b")
         pads_b = Record([
             ("tick", pads.tick_b),
             ("counter", pads.counter_b),
         ], "ticker_b")
         self.submodules.ticker_b = TickerZeroToMax(pads_b, max_cnt_b)
-        # self.submodules.ticker_b = TickerZeroToMax(pads.ticker_b, max_cnt_b)
-        # self.comb += pads.
 
         self.comb += pads.tick.eq(tick)
         self.comb += tick.eq(self.ticker_a.tick & self.ticker_b.tick)
@@ -97,7 +81,22 @@ class BeatTickerZeroToMax(Module):
 
 class PipelineSource(Module):
     def __init__(self, pads: Record, max_cnt: int):
-        pass
+        self.tick = tick = Signal()
+
+        pads_a = Record([
+            ("tick", pads.tick_a),
+            ("counter", pads.counter_a),
+        ], "ticker_a")
+        self.submodules.ticker_a = TickerZeroToMax(pads_a, max_cnt_a)
+
+        pads_b = Record([
+            ("tick", pads.tick_b),
+            ("counter", pads.counter_b),
+        ], "ticker_b")
+        self.submodules.ticker_b = TickerZeroToMax(pads_b, max_cnt_b)
+
+        self.comb += pads.tick.eq(tick)
+        self.comb += tick.eq(self.ticker_a.tick & self.ticker_b.tick)
 
 
 class Streamer(Module):
