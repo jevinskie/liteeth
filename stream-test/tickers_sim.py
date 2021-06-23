@@ -42,7 +42,7 @@ _io = [
     ("stream_out", 0,
         Subsignal("source_tick", Pins(1)),
         Subsignal("source_valid", Pins(1)),
-        Subsignal("source_counter", Pins(8)),
+        Subsignal("source_counter", Pins(64)),
         Subsignal("sink_valid", Pins(1)),
         Subsignal("sink_ready", Pins(1)),
         Subsignal("sink_first", Pins(1)),
