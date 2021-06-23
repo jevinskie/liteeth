@@ -84,9 +84,13 @@ class PipelineSource(Module):
         self.source_tick = tick = Signal()
         self.source_counter = counter = Signal(32)
         self.submodules.ticker = ticker
-        self.submodules.beat_ticker = beat_ticker
+        # self.submodules.beat_ticker = beat_ticker
+        #
+        # self.comb += tick.eq(self.ticker.tick & ~self.beat_ticker.tick)
+        # self.comb += pads.source_tick.eq(tick)
+        # self.comb += pads.source_counter.eq(counter)
 
-        self.comb += tick.eq(self.ticker.tick & ~self.beat_ticker.tick)
+        self.comb += tick.eq(self.ticker.tick)
         self.comb += pads.source_tick.eq(tick)
         self.comb += pads.source_counter.eq(counter)
 
