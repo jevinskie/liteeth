@@ -40,8 +40,9 @@ _io = [
         Subsignal("counter_b", Pins(32)),
      ),
     ("stream_out", 0,
+        Subsignal("source_tick", Pins(1)),
+        Subsignal("source_counter", Pins(32)),
         Subsignal("valid", Pins(1)),
-        Subsignal("tick", Pins(1)),
     )
     # ("beat_ticker", 0,
     #  Subsignal("tick", Pins(1)),
