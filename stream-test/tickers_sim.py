@@ -41,9 +41,14 @@ _io = [
      ),
     ("stream_out", 0,
         Subsignal("source_tick", Pins(1)),
-        Subsignal("source_counter", Pins(32)),
-        Subsignal("valid", Pins(1)),
-    )
+        Subsignal("source_valid", Pins(1)),
+        Subsignal("source_counter", Pins(8)),
+        Subsignal("sink_valid", Pins(1)),
+        Subsignal("sink_ready", Pins(1)),
+        Subsignal("sink_first", Pins(1)),
+        Subsignal("sink_last", Pins(1)),
+        Subsignal("sink_payload", Pins(8)),
+     )
     # ("beat_ticker", 0,
     #  Subsignal("tick", Pins(1)),
     #  Subsignal("ticker_a", Pins(1)),

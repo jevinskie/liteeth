@@ -82,10 +82,20 @@ class BeatTickerZeroToMax(Module):
 class PipelineSource(Module):
     def __init__(self, pads: Record, ticker: TickerZeroToMax, beat_ticker: BeatTickerZeroToMax):
         self.source_tick = tick = Signal()
-        self.source_counter = counter = Signal(32)
+        self.source_counter = counter = Signal(8)
         self.submodules.ticker = ticker
         # self.submodules.beat_ticker = beat_ticker
-        #
+
+        self.valid = valid = Signal()
+        self.source = stream.Endpoint([("dataz", counter.nbits)])
+        print(f'layout: {self.source.layout}')
+        self.submodules.sink_fifo = stream.SyncFIFO(layout=self.source.payload.layout, depth=4)
+
+        self.submodules.pipeline = stream.Pipeline(
+            self,
+            self.sink_fifo,
+        )
+
         # self.comb += tick.eq(self.ticker.tick & ~self.beat_ticker.tick)
         # self.comb += pads.source_tick.eq(tick)
         # self.comb += pads.source_counter.eq(counter)
@@ -93,11 +103,21 @@ class PipelineSource(Module):
         self.comb += tick.eq(self.ticker.tick)
         self.comb += pads.source_tick.eq(tick)
         self.comb += pads.source_counter.eq(counter)
+        self.comb += pads.source_valid.eq(valid)
+        self.comb += pads.sink_valid.eq(self.sink_fifo.sink.valid)
+        self.comb += pads.sink_ready.eq(self.sink_fifo.sink.ready)
+        self.comb += pads.sink_first.eq(self.sink_fifo.sink.first)
+        self.comb += pads.sink_last.eq(self.sink_fifo.sink.last)
+        self.comb += pads.sink_payload.eq(self.sink_fifo.sink.payload.raw_bits())
+        self.comb += self.source.valid.eq(valid)
+        self.comb += self.source.dataz.eq(counter)
 
         self.sync += \
             If(tick,
-               counter.eq(counter + 1)
+               counter.eq(counter + 1),
+               valid.eq(1),
             )
+
 
 
 class Streamer(Module):
