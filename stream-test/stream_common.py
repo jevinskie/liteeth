@@ -80,24 +80,13 @@ class BeatTickerZeroToMax(Module):
 
 
 class PipelineSource(Module):
-    def __init__(self, pads: Record, max_cnt: int):
+    def __init__(self, pads: Record, ticker: TickerZeroToMax, beat_ticker: BeatTickerZeroToMax):
         self.tick = tick = Signal()
+        self.submodules.ticker = ticker
+        self.submodules.beat_ticker = beat_ticker
 
-        pads_a = Record([
-            ("tick", pads.tick_a),
-            ("counter", pads.counter_a),
-        ], "ticker_a")
-        self.submodules.ticker_a = TickerZeroToMax(pads_a, max_cnt_a)
-
-        pads_b = Record([
-            ("tick", pads.tick_b),
-            ("counter", pads.counter_b),
-        ], "ticker_b")
-        self.submodules.ticker_b = TickerZeroToMax(pads_b, max_cnt_b)
-
+        self.comb += tick.eq(self.ticker.tick & ~self.beat_ticker.tick)
         self.comb += pads.tick.eq(tick)
-        self.comb += tick.eq(self.ticker_a.tick & self.ticker_b.tick)
-
 
 class Streamer(Module):
     def __init__(self, sys_clk_freq: int, target_ip: str, target_port: int, udp_port, bitrate: int = 15_000_000, nbits: int=64):

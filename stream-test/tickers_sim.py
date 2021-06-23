@@ -39,6 +39,10 @@ _io = [
         Subsignal("tick_b", Pins(1)),
         Subsignal("counter_b", Pins(32)),
      ),
+    ("stream_out", 0,
+        Subsignal("valid", Pins(1)),
+        Subsignal("tick", Pins(1)),
+    )
     # ("beat_ticker", 0,
     #  Subsignal("tick", Pins(1)),
     #  Subsignal("ticker_a", Pins(1)),
@@ -71,11 +75,13 @@ class BenchSoC(SoCCore):
         self.submodules.crg = CRG(platform.request("sys_clk"))
 
         # Ticker -----------------------------------------------------------------------------------
-        self.submodules.ticker_zero_to_max = TickerZeroToMax(self.platform.request("ticker_zero_to_max"), max_cnt=15)
-        self.submodules.ticker_zero_to_max_from_freq = TickerZeroToMax.from_freq(self.platform.request("ticker_zero_to_max_from_freq"), sys_clk_freq=sys_clk_freq, ticker_freq=sys_clk_freq/16)
+        ticker_zero_to_max = TickerZeroToMax(self.platform.request("ticker_zero_to_max"), max_cnt=15)
+        # self.submodules.ticker_zero_to_max_from_freq = TickerZeroToMax.from_freq(self.platform.request("ticker_zero_to_max_from_freq"), sys_clk_freq=sys_clk_freq, ticker_freq=sys_clk_freq/16)
         bt_pads = self.platform.request("beat_ticker")
-        self.submodules.beat_ticker = BeatTickerZeroToMax(bt_pads, max_cnt_a=2**3-3, max_cnt_b=2**4-9)
+        beat_ticker = BeatTickerZeroToMax(bt_pads, max_cnt_a=5, max_cnt_b=7)
 
+        # Pipeline ---------------------------------------------------------------------------------
+        self.submodules.stream = PipelineSource(self.platform.request("stream_out"), ticker_zero_to_max, beat_ticker)
 
         if sim_debug:
             platform.add_debug(self, reset=1 if trace_reset_on else 0)
