@@ -158,6 +158,7 @@ class Streamer(Module):
         period = 1 / (bitrate / nbits)
         counter_preload = int(sys_clk_freq * period / 2)
         # counter_preload = 2**16-1
+        counter_preload = 127
         print(f'bitrate: {bitrate} period: {period} counter_preload: {counter_preload}')
         calc_bitrate = (1 / period) * nbits
         print(f'calc_bitrate: {calc_bitrate}')
