@@ -6,7 +6,7 @@
 
 from liteeth.common import *
 
-from litex.soc.interconnect.packet import Depacketizer, Packetizer
+from litex.soc.interconnect.packet import Depacketizer, Packetizer, PacketFIFO
 
 # ICMP TX ------------------------------------------------------------------------------------------
 
@@ -46,11 +46,14 @@ class LiteEthICMPTX(Module):
                 NextState("SEND")
             )
         )
-        fsm.act("SEND",
-            packetizer.source.connect(source),
+        self.comb += [
+            packetizer.source.connect(source, omit={"valid", "ready"}),
             source.length.eq(sink.length + icmp_header.length),
             source.protocol.eq(icmp_protocol),
             source.ip_address.eq(sink.ip_address),
+        ]
+        fsm.act("SEND",
+            packetizer.source.connect(source, keep={"valid", "ready"}),
             If(source.valid & source.last & source.ready,
                 NextState("IDLE")
             )
@@ -133,11 +136,14 @@ class LiteEthICMPEcho(Module):
 
         # # #
 
-        # TODO: optimize ressources (no need to store parameters as datas)
-        self.submodules.buffer = stream.SyncFIFO(eth_icmp_user_description(dw), 128//(dw//8), buffered=True)
+        self.submodules.buffer = PacketFIFO(eth_icmp_user_description(dw),
+            payload_depth = 128//(dw//8),
+            param_depth   = 1,
+            buffered      = True
+        )
         self.comb += [
             sink.connect(self.buffer.sink),
-            self.buffer.source.connect(source),
+            self.buffer.source.connect(source, omit={"checksum"}),
             self.source.msgtype.eq(0x0),
             self.source.checksum.eq(self.buffer.source.checksum + 0x800 + (self.buffer.source.checksum >= 0xf800))
         ]
