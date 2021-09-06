@@ -50,7 +50,8 @@ class LiteEthUDPCrossbar(LiteEthCrossbar):
         self.submodules.tx_cdc = tx_cdc = stream.ClockDomainCrossing(
             layout  = eth_udp_user_description(user_port.dw),
             cd_from = cd,
-            cd_to   ="sys"
+            cd_to   = "sys",
+            depth   = 4096,
         )
         self.comb += user_port.sink.connect(tx_cdc.sink)
 
@@ -77,7 +78,8 @@ class LiteEthUDPCrossbar(LiteEthCrossbar):
         self.submodules.rx_cdc = rx_cdc = stream.ClockDomainCrossing(
             layout  = eth_udp_user_description(user_port.dw),
             cd_from = "sys",
-            cd_to   = cd
+            cd_to   = cd,
+            depth   = 4096,
         )
         self.comb += rx_converter.source.connect(rx_cdc.sink)
 
