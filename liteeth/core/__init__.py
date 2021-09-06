@@ -14,10 +14,10 @@ from liteeth.core.icmp import LiteEthICMP
 # IP Core ------------------------------------------------------------------------------------------
 
 class LiteEthIPCore(Module, AutoCSR):
-    def __init__(self, phy, mac_address, ip_address, clk_freq, with_icmp=True, dw=8):
+    def __init__(self, phy, mac_address, ip_address, clk_freq, with_icmp=True, dw=8, with_sim_hack=False):
         if isinstance(ip_address, str):
             ip_address = convert_ip(ip_address)
-        self.submodules.mac = LiteEthMAC(phy, dw, interface="crossbar", with_preamble_crc=True)
+        self.submodules.mac = LiteEthMAC(phy, dw, interface="crossbar", with_preamble_crc=True, with_sim_hack=with_sim_hack)
         self.submodules.arp = LiteEthARP(self.mac, mac_address, ip_address, clk_freq, dw=dw)
         self.submodules.ip  = LiteEthIP(self.mac, mac_address, ip_address, self.arp.table, dw=dw)
         if with_icmp:
@@ -26,9 +26,9 @@ class LiteEthIPCore(Module, AutoCSR):
 # UDP IP Core --------------------------------------------------------------------------------------
 
 class LiteEthUDPIPCore(LiteEthIPCore):
-    def __init__(self, phy, mac_address, ip_address, clk_freq, with_icmp=True, dw=8):
+    def __init__(self, phy, mac_address, ip_address, clk_freq, with_icmp=True, dw=8, with_sim_hack=False):
         if isinstance(ip_address, str):
             ip_address = convert_ip(ip_address)
         LiteEthIPCore.__init__(self, phy, mac_address, ip_address, clk_freq, dw=dw,
-                               with_icmp=with_icmp)
+                               with_icmp=with_icmp, with_sim_hack=with_sim_hack)
         self.submodules.udp = LiteEthUDP(self.ip, ip_address, dw=dw)
