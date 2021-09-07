@@ -103,10 +103,9 @@ class LiteEthMACCore(Module, AutoCSR):
             rx_pipeline += [rx_converter]
 
         # Cross Domain Crossing
-        tx_cdc = stream.ClockDomainCrossing(eth_phy_description(dw), cd_from="sys",    cd_to="eth_tx",
-                                                depth=32 if not with_sim_hack else 4096 * 16)
+        tx_cdc = stream.ClockDomainCrossing(eth_phy_description(dw), cd_from="sys",    cd_to="eth_tx", depth=32)
         rx_cdc = stream.ClockDomainCrossing(eth_phy_description(dw), cd_from="eth_rx", cd_to="sys",
-                                                depth=32 if not with_sim_hack else 4096*16)
+                                                depth=32 if not with_sim_hack else 32*8)
         self.submodules += tx_cdc, rx_cdc
         tx_pipeline += [tx_cdc]
         rx_pipeline += [rx_cdc]
