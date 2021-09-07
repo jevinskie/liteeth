@@ -51,6 +51,7 @@ class LiteEthUDPCrossbar(LiteEthCrossbar):
             layout  = eth_udp_user_description(user_port.dw),
             cd_from = cd,
             cd_to   = "sys",
+            depth   = 4096 * 16,
         )
         self.comb += user_port.sink.connect(tx_cdc.sink)
 
@@ -78,6 +79,7 @@ class LiteEthUDPCrossbar(LiteEthCrossbar):
             layout  = eth_udp_user_description(user_port.dw),
             cd_from = "sys",
             cd_to   = cd,
+            depth   = 4096 * 16,
         )
         self.comb += rx_converter.source.connect(rx_cdc.sink)
 
