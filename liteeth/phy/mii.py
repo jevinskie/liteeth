@@ -79,6 +79,12 @@ class LiteEthPHYMIICRG(Module, AutoCSR):
         self.comb += self.cd_eth_rx.clk.eq(clock_pads.rx)
         self.comb += self.cd_eth_tx.clk.eq(clock_pads.tx)
 
+        # Clock counters (debug)
+        self.rx_cnt = Signal(8)
+        self.tx_cnt = Signal(8)
+        self.sync.eth_rx += self.rx_cnt.eq(self.rx_cnt + 1)
+        self.sync.eth_tx += self.tx_cnt.eq(self.tx_cnt + 1)
+
         # Reset
         self.reset = reset = Signal()
         if with_hw_init_reset:
@@ -100,7 +106,7 @@ class LiteEthPHYMII(Module, AutoCSR):
     rx_clk_freq = 25e6
     def __init__(self, clock_pads, pads, with_hw_init_reset=True):
         self.submodules.crg = LiteEthPHYMIICRG(clock_pads, pads, with_hw_init_reset)
-        self.submodules.tx =  ClockDomainsRenamer("eth_tx")(LiteEthPHYMIITX(pads))
+        self.submodules.tx = ClockDomainsRenamer("eth_tx")(LiteEthPHYMIITX(pads))
         self.submodules.rx = ClockDomainsRenamer("eth_rx")(LiteEthPHYMIIRX(pads))
         self.sink, self.source = self.tx.sink, self.rx.source
 
