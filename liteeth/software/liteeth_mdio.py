@@ -4,6 +4,8 @@ import time
 
 from litex import RemoteClient
 
+from mdio_regs import Regs as R
+
 try:
     from rich import print
 except ImportError:
@@ -113,7 +115,13 @@ def main():
     #     r = mdioc.read(0, i)
     #     print(f'{i:02x} => 0x{r:04x}')
 
+    ctrl_p = mdioc.read(0, R.CONTROL_COPPER.addr)
+    ctrl = R.CONTROL_COPPER(packed=ctrl_p)
+    print(ctrl)
 
+    status_p = mdioc.read(0, R.STATUS_COPPER.addr)
+    status = R.CONTROL_COPPER(packed=status_p)
+    print(status)
 
 if __name__ == '__main__':
     main()

@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import collections
 from typing import Final, Optional
 
@@ -289,7 +287,7 @@ class BitFieldUnion(metaclass=BitFieldUnionMeta):
             setattr(self, k, v)
 
     def __repr__(self):
-        hdr = f'<{self.__class__.__name__} @ {self.addr:#04x} ==> {self.packed:#04x}'
+        hdr = f'<{self.__class__.__name__} @ {self.addr:#04x} ==> {self.packed:#06x}'
         ftr = '>'
         fbfs = []
         if len(self.packed_fields):
@@ -298,9 +296,9 @@ class BitFieldUnion(metaclass=BitFieldUnionMeta):
             for bf_name in self.packed_fields:
                 v = self.__getattribute__(bf_name)
                 if v.width == 1:
-                    fbfs.append(f"\t{bf_name:>{longest_name_len}}[{v.offset}]   => {bool(v)}")
+                    fbfs.append(f"\t{bf_name:>{longest_name_len}}[{v.offset:2}]   => {bool(v)}")
                 else:
-                    fbfs.append(f"\t{bf_name:>{longest_name_len}}[{v.offset}:{v.offset+v.width}] => {v:d} {v:#04x} {v:#0{2+v.width}b}")
+                    fbfs.append(f"\t{bf_name:>{longest_name_len}}[{v.offset}:{v.offset+v.width}] => {v:d} {v:#06x} {v:#0{2+v.width}b}")
             return (
                 hdr +
                 '\n'.join(fbfs) +
