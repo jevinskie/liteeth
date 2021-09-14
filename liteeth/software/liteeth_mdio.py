@@ -120,8 +120,12 @@ def main():
     print(ctrl)
 
     status_p = mdioc.read(0, R.STATUS_COPPER.addr)
-    status = R.CONTROL_COPPER(packed=status_p)
+    status = R.STATUS_COPPER(packed=status_p)
     print(status)
+
+    phy_spec_status_p = mdioc.read(0, R.PHY_SPECIFIC_STATUS_COPPER.addr)
+    phy_spec_status = R.PHY_SPECIFIC_STATUS_COPPER(packed=phy_spec_status_p)
+    print(phy_spec_status)
 
 if __name__ == '__main__':
     main()

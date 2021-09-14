@@ -296,9 +296,9 @@ class BitFieldUnion(metaclass=BitFieldUnionMeta):
             for bf_name in self.packed_fields:
                 v = self.__getattribute__(bf_name)
                 if v.width == 1:
-                    fbfs.append(f"\t{bf_name:>{longest_name_len}}[{v.offset:2}]   => {bool(v)}")
+                    fbfs.append(f"\t{bf_name:>{longest_name_len}}[{v.offset:2}]    => {bool(v)}")
                 else:
-                    fbfs.append(f"\t{bf_name:>{longest_name_len}}[{v.offset}:{v.offset+v.width}] => {v:d} {v:#06x} {v:#0{2+v.width}b}")
+                    fbfs.append(f"\t{bf_name:>{longest_name_len}}[{v.offset:2}:{v.offset+v.width-1:2}] => {v:#06x} {v:d} {v:#0{2+v.width}b}")
             return (
                 hdr +
                 '\n'.join(fbfs) +

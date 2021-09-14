@@ -50,5 +50,20 @@ class Regs(metaclass=RegsListMeta):
         autoneg_ability = BitField(3, 1)
         copper_link_status = BitField(2, 1)
         jabber_detect = BitField(1, 1)
-        extended_capability = BitField(0, 0)
+        extended_capability = BitField(0, 1)
 
+    class PHY_SPECIFIC_STATUS_COPPER(BitFieldUnion):
+        addr: Final[int] = 0x11
+        speed = BitField(14, 2)
+        duplex = BitField(13, 1)
+        page_rxed = BitField(12, 1)
+        speed_and_duplex_resolved = BitField(11, 1)
+        link_real_time = BitField(10, 1)
+        cable_length_gige = BitField(7, 3)
+        mdi_crossover = BitField(6, 1)
+        downshift = BitField(5, 1)
+        copper_energy_detect = BitField(4, 1)
+        tx_pause_en = BitField(3, 1)
+        rx_pause_en = BitField(2, 1)
+        polarity_real_time = BitField(1, 1)
+        jabber_real_time = BitField(0, 1)
