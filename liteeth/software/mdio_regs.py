@@ -67,3 +67,15 @@ class Regs(metaclass=RegsListMeta):
         rx_pause_en = BitField(2, 1)
         polarity_real_time = BitField(1, 1)
         jabber_real_time = BitField(0, 1)
+
+    class EXT_PHY_SPECIFIC_CTRL(BitFieldUnion):
+        addr: Final[int] = 0x14
+        block_carrier_ext = BitField(15, 1)
+        line_loopback = BitField(14, 1)
+        disable_link_pulses = BitField(12, 1)
+        downshift_counter = BitField(9, 3)
+        downshift_en = BitField(8, 1)
+        rgmii_rx_timing_ctrl = BitField(7, 1)
+        default_mac_speed = BitField(4, 3)
+        dte_detect_en = BitField(2, 1)
+        rgmii_tx_timing_ctrl = BitField(1, 1)

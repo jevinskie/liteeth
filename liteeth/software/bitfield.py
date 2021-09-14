@@ -298,7 +298,7 @@ class BitFieldUnion(metaclass=BitFieldUnionMeta):
                 if v.width == 1:
                     fbfs.append(f"\t{bf_name:>{longest_name_len}}[{v.offset:2}]    => {bool(v)}")
                 else:
-                    fbfs.append(f"\t{bf_name:>{longest_name_len}}[{v.offset:2}:{v.offset+v.width-1:2}] => {v:#06x} {v:d} {v:#0{2+v.width}b}")
+                    fbfs.append(f"\t{bf_name:>{longest_name_len}}[{v.offset+v.width-1:2}:{v.offset:2}] => {v:#06x} {v:d} {v:#0{2+v.width}b}")
             return (
                 hdr +
                 '\n'.join(fbfs) +

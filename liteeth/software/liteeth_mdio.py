@@ -127,5 +127,9 @@ def main():
     phy_spec_status = R.PHY_SPECIFIC_STATUS_COPPER(packed=phy_spec_status_p)
     print(phy_spec_status)
 
+    ext_phy_spec_ctrl_p = mdioc.read(0, R.EXT_PHY_SPECIFIC_CTRL.addr)
+    ext_phy_spec_ctrl = R.EXT_PHY_SPECIFIC_CTRL(packed=ext_phy_spec_ctrl_p)
+    print(ext_phy_spec_ctrl)
+
 if __name__ == '__main__':
     main()
