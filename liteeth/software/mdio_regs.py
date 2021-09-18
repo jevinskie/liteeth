@@ -18,7 +18,7 @@ class RegsListMeta(type):
             if isinstance(v, BitFieldUnionMeta):
                 self.addr2reg[v.addr] = v
 
-class Regs(metaclass=RegsListMeta):
+class MDIORegs(metaclass=RegsListMeta):
     addr2reg: Final[dict[int, BitFieldUnionMeta]] = {}
 
     class CONTROL_COPPER(BitFieldUnion):
@@ -79,3 +79,23 @@ class Regs(metaclass=RegsListMeta):
         default_mac_speed = BitField(4, 3)
         dte_detect_en = BitField(2, 1)
         rgmii_tx_timing_ctrl = BitField(1, 1)
+
+    class RX_ERROR_COUNTER(BitFieldUnion):
+        addr: Final[int] = 0x15
+        rx_err_cnt = BitField(0, 16)
+
+    class GLOBAL_STATUS(BitFieldUnion):
+        addr: Final[int] = 0x17
+        port_irq = BitField(0, 1)
+
+    class EXT_PHY_SPECIFIC_STATUS(BitFieldUnion):
+        addr: Final[int] = 0x1b
+        fiber_copper_autosel_dis = BitField(15, 1)
+        fiper_copper_resolution = BitField(13, 1)
+        serial_if_autoneg_bypass_en = BitField(12, 1)
+        serial_if_autoneg_bypass_status = BitField(11, 1)
+        irq_polarity = BitField(10, 1)
+        dis_en_auto_medium_reg_sel = BitField(9, 1)
+        dte_det_status_drop_hys = BitField(5, 4)
+        dte_pwr_status = BitField(4, 1)
+        hw_config = BitField(0, 4)

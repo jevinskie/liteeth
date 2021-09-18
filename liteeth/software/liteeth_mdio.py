@@ -4,7 +4,8 @@ import time
 
 from litex import RemoteClient
 
-from mdio_regs import Regs as R
+from mdio_regs import BitFieldUnion
+from mdio_regs import MDIORegs as R
 
 try:
     from rich import print
@@ -105,6 +106,18 @@ class MDIOClient:
         self.raw_turnaround()
         return r
 
+    def read_reg(self, phyaddr: int, reg: BitFieldUnion):
+        packed = self.read(phyaddr, reg.addr)
+        return reg(packed=packed)
+
+    def write_reg(self, phyaddr: int, reg: BitFieldUnion):
+        self.write(phyaddr, reg.addr, reg.packed)
+
+    def reset(self, phyaddr: int):
+        r = self.read_reg(phyaddr, R.CONTROL_COPPER)
+        r.reset = 1
+        self.write_reg(phyaddr, r)
+
 def main():
     bus = RemoteClient()
     bus.open()
@@ -115,21 +128,27 @@ def main():
     #     r = mdioc.read(0, i)
     #     print(f'{i:02x} => 0x{r:04x}')
 
-    ctrl_p = mdioc.read(0, R.CONTROL_COPPER.addr)
-    ctrl = R.CONTROL_COPPER(packed=ctrl_p)
-    print(ctrl)
+    print(mdioc.read_reg(0, R.CONTROL_COPPER))
 
-    status_p = mdioc.read(0, R.STATUS_COPPER.addr)
-    status = R.STATUS_COPPER(packed=status_p)
-    print(status)
+    print(mdioc.read_reg(0, R.STATUS_COPPER))
 
-    phy_spec_status_p = mdioc.read(0, R.PHY_SPECIFIC_STATUS_COPPER.addr)
-    phy_spec_status = R.PHY_SPECIFIC_STATUS_COPPER(packed=phy_spec_status_p)
-    print(phy_spec_status)
+    print(mdioc.read_reg(0, R.PHY_SPECIFIC_STATUS_COPPER))
 
-    ext_phy_spec_ctrl_p = mdioc.read(0, R.EXT_PHY_SPECIFIC_CTRL.addr)
-    ext_phy_spec_ctrl = R.EXT_PHY_SPECIFIC_CTRL(packed=ext_phy_spec_ctrl_p)
-    print(ext_phy_spec_ctrl)
+    print(mdioc.read_reg(0, R.EXT_PHY_SPECIFIC_CTRL))
+
+    # print(mdioc.read_reg(0, R.RX_ERROR_COUNTER))
+
+    # print(mdioc.read_reg(0, R.GLOBAL_STATUS))
+
+    r = mdioc.read_reg(0, R.EXT_PHY_SPECIFIC_STATUS)
+    print(r)
+    r.hw_config = 0b1111
+    mdioc.write_reg(0, r)
+    mdioc.reset(0)
+    r = mdioc.read_reg(0, R.EXT_PHY_SPECIFIC_STATUS)
+
+    print(mdioc.read_reg(0, R.PHY_SPECIFIC_STATUS_COPPER))
+
 
 if __name__ == '__main__':
     main()
