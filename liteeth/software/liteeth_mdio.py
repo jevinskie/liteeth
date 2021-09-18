@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import time
 
 from litex import RemoteClient
@@ -118,7 +119,7 @@ class MDIOClient:
         r.reset = 1
         self.write_reg(phyaddr, r)
 
-def main():
+def main(args):
     bus = RemoteClient()
     bus.open()
 
@@ -142,13 +143,17 @@ def main():
 
     r = mdioc.read_reg(0, R.EXT_PHY_SPECIFIC_STATUS)
     print(r)
-    r.hw_config = 0b1111
-    mdioc.write_reg(0, r)
-    mdioc.reset(0)
-    r = mdioc.read_reg(0, R.EXT_PHY_SPECIFIC_STATUS)
+    if args.reconfig:
+        r.hw_config = 0b1111
+        mdioc.write_reg(0, r)
+        mdioc.reset(0)
+        r = mdioc.read_reg(0, R.EXT_PHY_SPECIFIC_STATUS)
 
-    print(mdioc.read_reg(0, R.PHY_SPECIFIC_STATUS_COPPER))
+        print(mdioc.read_reg(0, R.PHY_SPECIFIC_STATUS_COPPER))
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--reconfig", action="store_true", help="Reconfigure to GMII mode for 100 Mbps MII PHY mode.")
+    args = parser.parse_args()
+    main(args)
