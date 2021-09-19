@@ -125,35 +125,35 @@ def main(args):
 
     mdioc = MDIOClient(bus)
 
+    phyaddr = args.phyaddr
+
     # for i in range(32):
     #     r = mdioc.read(0, i)
     #     print(f'{i:02x} => 0x{r:04x}')
+    if args.dump:
+        print(mdioc.read_reg(phyaddr, R.CONTROL_COPPER))
+        print(mdioc.read_reg(phyaddr, R.STATUS_COPPER))
+        print(mdioc.read_reg(phyaddr, R.PHY_SPECIFIC_STATUS_COPPER))
+        print(mdioc.read_reg(phyaddr, R.EXT_PHY_SPECIFIC_CTRL))
+        print(mdioc.read_reg(phyaddr, R.RX_ERROR_COUNTER))
+        # print(mdioc.read_reg(phyaddr, R.GLOBAL_STATUS))
 
-    print(mdioc.read_reg(0, R.CONTROL_COPPER))
-
-    print(mdioc.read_reg(0, R.STATUS_COPPER))
-
-    print(mdioc.read_reg(0, R.PHY_SPECIFIC_STATUS_COPPER))
-
-    print(mdioc.read_reg(0, R.EXT_PHY_SPECIFIC_CTRL))
-
-    # print(mdioc.read_reg(0, R.RX_ERROR_COUNTER))
-
-    # print(mdioc.read_reg(0, R.GLOBAL_STATUS))
-
-    r = mdioc.read_reg(0, R.EXT_PHY_SPECIFIC_STATUS)
+    r = mdioc.read_reg(phyaddr, R.EXT_PHY_SPECIFIC_STATUS)
     print(r)
     if args.reconfig:
-        r.hw_config = 0b1111
-        mdioc.write_reg(0, r)
-        mdioc.reset(0)
-        r = mdioc.read_reg(0, R.EXT_PHY_SPECIFIC_STATUS)
+        r.hw_config = args.hwconfig
+        mdioc.write_reg(phyaddr, r)
+        mdioc.reset(phyaddr)
+        r = mdioc.read_reg(phyaddr, R.EXT_PHY_SPECIFIC_STATUS)
 
-        print(mdioc.read_reg(0, R.PHY_SPECIFIC_STATUS_COPPER))
+        print(mdioc.read_reg(phyaddr, R.PHY_SPECIFIC_STATUS_COPPER))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--reconfig", action="store_true", help="Reconfigure to GMII mode for 100 Mbps MII PHY mode.")
+    parser.add_argument("--phyaddr", default=0, type=lambda x: int(x, 0), help="PHY address.")
+    parser.add_argument("--dump", action="store_true", help="Dump and decode MDIO registers.")
+    parser.add_argument("--reconfig", action="store_true", help="Reconfigure HW_CONFIG mode.")
+    parser.add_argument("--hwconfig", default=0b1111, type=lambda x: int(x, 0), help="HW_CONFIG mode.")
     args = parser.parse_args()
     main(args)
