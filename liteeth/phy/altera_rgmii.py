@@ -154,8 +154,8 @@ class LiteEthPHYRGMIICRG(Module, AutoCSR):
         # RX clock
         self.clock_domains.cd_eth_rx = ClockDomain()
         self.comb += self.cd_eth_rx.clk.eq(clock_pads.rx)
-        # self.submodules.clkbuf = ClockBuffer(self.cd_eth_rx)
-        self.specials += ClockBuffer(self.cd_eth_rx)
+        self.clkbuf = ClockBuffer(self.cd_eth_rx)
+        self.specials += self.clkbuf
 
         # TX clock
         self.clock_domains.cd_eth_tx         = ClockDomain()
@@ -164,14 +164,14 @@ class LiteEthPHYRGMIICRG(Module, AutoCSR):
         assert tx_phase < 360
         from litex.soc.cores.clock import Max10PLL
         self.submodules.pll = pll = Max10PLL()
-        pll.register_clkin(ClockSignal("eth_rx"), 125e6)
+        pll.register_clkin(self.clkbuf.clk_out, 125e6)
         pll.create_clkout(self.cd_eth_tx, 125e6, with_reset=False)
         pll.create_clkout(self.cd_eth_tx_delayed, 125e6, phase=tx_phase)
 
         self.specials += [
-            Instance("ALTDDIO_OUT",
+            Instance("altddio_out",
                 p_WIDTH = 2,
-                i_outclk  = ClockSignal("eth_tx_delayed"),
+                i_outclock  = ClockSignal("eth_tx_delayed"),
                 i_datain_h = 1,
                 i_datain_l = 0,
                 i_OE = 1,
@@ -208,9 +208,9 @@ class LiteEthPHYRGMII(Module, AutoCSR):
             iodelay_clk_freq=200e6, hw_reset_cycles=256):
         self.clock_pads = clock_pads
         self.submodules.crg = LiteEthPHYRGMIICRG(clock_pads, pads, with_hw_init_reset, tx_delay, hw_reset_cycles)
-        self.submodules.tx  = ClockDomainsRenamer("eth_tx")(LiteEthPHYRGMIITX(pads))
-        self.submodules.rx  = ClockDomainsRenamer("eth_rx")(LiteEthPHYRGMIIRX(pads, rx_delay, iodelay_clk_freq))
-        self.sink, self.source = self.tx.sink, self.rx.source
+        # self.submodules.tx  = ClockDomainsRenamer("eth_tx")(LiteEthPHYRGMIITX(pads))
+        # self.submodules.rx  = ClockDomainsRenamer("eth_rx")(LiteEthPHYRGMIIRX(pads, rx_delay, iodelay_clk_freq))
+        # self.sink, self.source = self.tx.sink, self.rx.source
 
         if hasattr(pads, "mdc"):
             self.submodules.mdio = LiteEthPHYMDIO(pads)
