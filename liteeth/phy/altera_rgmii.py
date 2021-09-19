@@ -8,6 +8,7 @@
 # RGMII PHY for Altera FPGA
 
 from migen import *
+from migen.genlib.cdc import ClockBuffer
 from migen.genlib.resetsync import AsyncResetSynchronizer
 
 from liteeth.common import *
@@ -152,46 +153,37 @@ class LiteEthPHYRGMIICRG(Module, AutoCSR):
 
         # RX clock
         self.clock_domains.cd_eth_rx = ClockDomain()
-        eth_rx_clk_ibuf = Signal()
-        self.specials += [
-            Instance("IBUF",
-                i_I = clock_pads.rx,
-                o_O = eth_rx_clk_ibuf,
-            ),
-            Instance("BUFG",
-                i_I = eth_rx_clk_ibuf,
-                o_O = self.cd_eth_rx.clk,
-            ),
-        ]
+        self.comb += self.cd_eth_rx.clk.eq(clock_pads.rx)
+        # self.submodules.clkbuf = ClockBuffer(self.cd_eth_rx)
+        self.specials += ClockBuffer(self.cd_eth_rx)
 
         # TX clock
         self.clock_domains.cd_eth_tx         = ClockDomain()
         self.clock_domains.cd_eth_tx_delayed = ClockDomain(reset_less=True)
         tx_phase = 125e6*tx_delay*360
         assert tx_phase < 360
-        from litex.soc.cores.clock import S7PLL
-        self.submodules.pll = pll = S7PLL()
+        from litex.soc.cores.clock import Max10PLL
+        self.submodules.pll = pll = Max10PLL()
         pll.register_clkin(ClockSignal("eth_rx"), 125e6)
         pll.create_clkout(self.cd_eth_tx, 125e6, with_reset=False)
         pll.create_clkout(self.cd_eth_tx_delayed, 125e6, phase=tx_phase)
 
-        eth_tx_clk_obuf = Signal()
         self.specials += [
-            Instance("ODDR",
-                p_DDR_CLK_EDGE = "SAME_EDGE",
-                i_C  = ClockSignal("eth_tx_delayed"),
-                i_CE = 1,
-                i_S  = 0,
-                i_R  = 0,
-                i_D1 = 1,
-                i_D2 = 0,
-                o_Q  = eth_tx_clk_obuf,
+            Instance("ALTDDIO_OUT",
+                p_WIDTH = 2,
+                i_outclk  = ClockSignal("eth_tx_delayed"),
+                i_datain_h = 1,
+                i_datain_l = 0,
+                i_OE = 1,
+                o_dataout  =  clock_pads.tx,
             ),
-            Instance("OBUF",
-                i_I = eth_tx_clk_obuf,
-                o_O = clock_pads.tx,
-            )
         ]
+
+        # Clock counters (debug)
+        self.rx_cnt = Signal(8)
+        self.tx_cnt = Signal(8)
+        self.sync.eth_rx += self.rx_cnt.eq(self.rx_cnt + 1)
+        self.sync.eth_tx += self.tx_cnt.eq(self.tx_cnt + 1)
 
         # Reset
         self.reset = reset = Signal()
@@ -214,6 +206,7 @@ class LiteEthPHYRGMII(Module, AutoCSR):
     rx_clk_freq = 125e6
     def __init__(self, clock_pads, pads, with_hw_init_reset=True, tx_delay=2e-9, rx_delay=2e-9,
             iodelay_clk_freq=200e6, hw_reset_cycles=256):
+        self.clock_pads = clock_pads
         self.submodules.crg = LiteEthPHYRGMIICRG(clock_pads, pads, with_hw_init_reset, tx_delay, hw_reset_cycles)
         self.submodules.tx  = ClockDomainsRenamer("eth_tx")(LiteEthPHYRGMIITX(pads))
         self.submodules.rx  = ClockDomainsRenamer("eth_rx")(LiteEthPHYRGMIIRX(pads, rx_delay, iodelay_clk_freq))

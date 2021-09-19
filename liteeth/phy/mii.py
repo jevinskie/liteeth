@@ -105,6 +105,7 @@ class LiteEthPHYMII(Module, AutoCSR):
     tx_clk_freq = 25e6
     rx_clk_freq = 25e6
     def __init__(self, clock_pads, pads, with_hw_init_reset=True):
+        self.clock_pads = clock_pads
         self.submodules.crg = LiteEthPHYMIICRG(clock_pads, pads, with_hw_init_reset)
         self.submodules.tx = ClockDomainsRenamer("eth_tx")(LiteEthPHYMIITX(pads))
         self.submodules.rx = ClockDomainsRenamer("eth_rx")(LiteEthPHYMIIRX(pads))
