@@ -11,6 +11,8 @@ from migen import *
 from migen.genlib.cdc import ClockBuffer
 from migen.genlib.resetsync import AsyncResetSynchronizer
 
+from litex.build.io import DDROutput, DDRInput
+
 from liteeth.common import *
 from liteeth.phy.common import *
 
@@ -66,118 +68,51 @@ class LiteEthPHYRGMIIRX(Module):
 
         # # #
 
-        assert iodelay_clk_freq in [200e6, 300e6, 400e6]
-        iodelay_tap_average = 1 / (2*32 * iodelay_clk_freq)
-        rx_delay_taps = round(rx_delay / iodelay_tap_average)
-        assert rx_delay_taps < 32, "Exceeded ODELAYE2 max value: {} >= 32".format(rx_delay_taps)
-
-        rx_ctl_ibuf    = Signal()
-        rx_ctl_idelay  = Signal()
-        rx_ctl         = Signal()
-        rx_data_ibuf   = Signal(4)
-        rx_data_idelay = Signal(4)
-        rx_data        = Signal(8)
+        self.rx_ctl = rx_ctl         = Signal(2)
+        self.rx_ctl_reg = rx_ctl_reg     = Signal(2)
+        self.rx_data = rx_data        = Signal(8)
+        self.rx_data_reg = rx_data_reg    = Signal(8)
 
         self.specials += [
-            Instance("IBUF", i_I=pads.rx_ctl, o_O=rx_ctl_ibuf),
-            Instance("IDELAYE2",
-                p_IDELAY_TYPE  = "FIXED",
-                p_IDELAY_VALUE = rx_delay_taps,
-                p_REFCLK_FREQUENCY = iodelay_clk_freq/1e6,
-                i_C        = 0,
-                i_LD       = 0,
-                i_CE       = 0,
-                i_LDPIPEEN = 0,
-                i_INC      = 0,
-                i_IDATAIN  = rx_ctl_ibuf,
-                o_DATAOUT  = rx_ctl_idelay,
-            ),
-            Instance("IDDR",
-                p_DDR_CLK_EDGE = "SAME_EDGE_PIPELINED",
-                i_C  = ClockSignal("eth_rx"),
-                i_CE = 1,
-                i_S  = 0,
-                i_R  = 0,
-                i_D  = rx_ctl_idelay,
-                o_Q1 = rx_ctl,
-                o_Q2 = Signal(),
+            DDRInput(
+                clk = ClockSignal("eth_rx"),
+                i   = pads.rx_ctl,
+                o1  = rx_ctl[0],
+                o2  = rx_ctl[1]
             )
         ]
+        self.sync += rx_ctl_reg.eq(rx_ctl)
         for i in range(4):
             self.specials += [
-                Instance("IBUF",
-                    i_I = pads.rx_data[i],
-                    o_O = rx_data_ibuf[i],
-                ),
-                Instance("IDELAYE2",
-                    p_IDELAY_TYPE  = "FIXED",
-                    p_IDELAY_VALUE = rx_delay_taps,
-                    p_REFCLK_FREQUENCY = iodelay_clk_freq/1e6,
-                    i_C        = 0,
-                    i_LD       = 0,
-                    i_CE       = 0,
-                    i_LDPIPEEN = 0,
-                    i_INC      = 0,
-                    i_IDATAIN  = rx_data_ibuf[i],
-                    o_DATAOUT  = rx_data_idelay[i],
-                ),
-                Instance("IDDR",
-                    p_DDR_CLK_EDGE = "SAME_EDGE_PIPELINED",
-                    i_C  = ClockSignal("eth_rx"),
-                    i_CE = 1,
-                    i_S  = 0,
-                    i_R  = 0,
-                    i_D  = rx_data_idelay[i],
-                    o_Q1 = rx_data[i],
-                    o_Q2 = rx_data[i+4],
+                DDRInput(
+                    clk = ClockSignal("eth_rx"),
+                    i   = pads.rx_data[i],
+                    o1  = rx_data[i],
+                    o2  = rx_data[i+4]
                 )
             ]
+        self.sync += rx_data_reg.eq(rx_data)
 
-        rx_ctl_d = Signal()
-        self.sync += rx_ctl_d.eq(rx_ctl)
+        rx_ctl_reg_d = Signal(2)
+        self.sync += rx_ctl_reg_d.eq(rx_ctl_reg)
 
         last = Signal()
-        self.comb += last.eq(~rx_ctl & rx_ctl_d)
+        self.comb += last.eq(~rx_ctl_reg[0] & rx_ctl_reg_d[0])
         self.sync += [
-            source.valid.eq(rx_ctl),
-            source.data.eq(rx_data)
+            source.valid.eq(rx_ctl_reg[0]),
+            source.data.eq(rx_data_reg)
         ]
         self.comb += source.last.eq(last)
 
 
 class LiteEthPHYRGMIICRG(Module, AutoCSR):
-    def __init__(self, clock_pads, pads, with_hw_init_reset, tx_delay=2e-9, hw_reset_cycles=256):
+    def __init__(self, clock_pads, pads, with_hw_init_reset, cd_eth_rx: ClockDomain, tx_delay=2e-9, hw_reset_cycles=256):
         self._reset = CSRStorage()
 
         # # #
-
-        # RX clock
-        self.clock_domains.cd_eth_rx = ClockDomain()
-        self.comb += self.cd_eth_rx.clk.eq(clock_pads.rx)
-        self.clkbuf = ClockBuffer(self.cd_eth_rx)
-        self.specials += self.clkbuf
-
-        # TX clock
-        self.clock_domains.cd_eth_tx         = ClockDomain()
-        self.clock_domains.cd_eth_tx_delayed = ClockDomain(reset_less=True)
-        tx_phase = 125e6*tx_delay*360
-        assert tx_phase < 360
-        from litex.soc.cores.clock import Max10PLL
-        self.submodules.pll = pll = Max10PLL()
-        pll.register_clkin(self.clkbuf.clk_out, 125e6)
-        pll.create_clkout(self.cd_eth_tx, 125e6, with_reset=False)
-        pll.create_clkout(self.cd_eth_tx_delayed, 125e6, phase=tx_phase)
-
-        self.specials += [
-            Instance("altddio_out",
-                p_WIDTH = 2,
-                i_outclock  = ClockSignal("eth_tx_delayed"),
-                i_datain_h = 1,
-                i_datain_l = 0,
-                i_OE = 1,
-                o_dataout  =  clock_pads.tx,
-            ),
-        ]
+        self.comb += cd_eth_rx.clk.eq(clock_pads.rx)
+        self.rxclkbuf = ClockBuffer(cd_eth_rx)
+        self.specials += self.rxclkbuf
 
         # Clock counters (debug)
         self.rx_cnt = Signal(8)
@@ -195,8 +130,8 @@ class LiteEthPHYRGMIICRG(Module, AutoCSR):
         if hasattr(pads, "rst_n"):
             self.comb += pads.rst_n.eq(~reset)
         self.specials += [
-            AsyncResetSynchronizer(self.cd_eth_tx, reset),
-            AsyncResetSynchronizer(self.cd_eth_rx, reset),
+            AsyncResetSynchronizer(ClockDomain("eth_tx"), reset),
+            AsyncResetSynchronizer(ClockDomain("eth_rx"), reset),
         ]
 
 
@@ -204,12 +139,12 @@ class LiteEthPHYRGMII(Module, AutoCSR):
     dw          = 8
     tx_clk_freq = 125e6
     rx_clk_freq = 125e6
-    def __init__(self, clock_pads, pads, with_hw_init_reset=True, tx_delay=2e-9, rx_delay=2e-9,
+    def __init__(self, clock_pads, pads, cd_eth_rx: ClockDomain, with_hw_init_reset=True, tx_delay=2e-9, rx_delay=2e-9,
             iodelay_clk_freq=200e6, hw_reset_cycles=256):
         self.clock_pads = clock_pads
-        self.submodules.crg = LiteEthPHYRGMIICRG(clock_pads, pads, with_hw_init_reset, tx_delay, hw_reset_cycles)
+        self.submodules.crg = LiteEthPHYRGMIICRG(clock_pads, pads, with_hw_init_reset, cd_eth_rx, tx_delay, hw_reset_cycles)
         # self.submodules.tx  = ClockDomainsRenamer("eth_tx")(LiteEthPHYRGMIITX(pads))
-        # self.submodules.rx  = ClockDomainsRenamer("eth_rx")(LiteEthPHYRGMIIRX(pads, rx_delay, iodelay_clk_freq))
+        self.submodules.rx  = ClockDomainsRenamer("eth_rx")(LiteEthPHYRGMIIRX(pads, rx_delay))
         # self.sink, self.source = self.tx.sink, self.rx.source
 
         if hasattr(pads, "mdc"):
