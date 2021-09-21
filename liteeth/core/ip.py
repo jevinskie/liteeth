@@ -46,39 +46,42 @@ class LiteEthIPV4Crossbar(LiteEthCrossbar):
 @ResetInserter()
 @CEInserter()
 class LiteEthIPV4Checksum(Module):
-    def __init__(self, words_per_clock_cycle=1, skip_checksum=False):
+    def __init__(self, words_per_clock_cycle=1, skip_checksum=False, dummy=True):
         self.header = Signal(ipv4_header.length*8)
         self.value  = Signal(16)
         self.done   = Signal()
 
         # # #
-
-        s = Signal(17, reset_less=True)
-        r = Signal(17, reset_less=True)
-        n_cycles = 0
-        for i in range(ipv4_header.length//2):
-            if skip_checksum and (i == ipv4_header.fields["checksum"].byte//2):
-                pass
-            else:
-                s_next = Signal(17, reset_less=True)
-                r_next = Signal(17, reset_less=True)
-                self.comb += s_next.eq(r + self.header[i*16:(i+1)*16])
-                r_next_eq = r_next.eq(Cat(s_next[:16]+s_next[16], Signal()))
-                if (i%words_per_clock_cycle) != 0:
-                    self.comb += r_next_eq
+        if not dummy:
+            s = Signal(17, reset_less=True)
+            r = Signal(17, reset_less=True)
+            n_cycles = 0
+            for i in range(ipv4_header.length//2):
+                if skip_checksum and (i == ipv4_header.fields["checksum"].byte//2):
+                    pass
                 else:
-                    self.sync += If(~self.done, r_next_eq)
-                    n_cycles += 1
-                s, r = s_next, r_next
-        self.comb += self.value.eq(~Cat(r[8:16], r[:8]))
+                    s_next = Signal(17, reset_less=True)
+                    r_next = Signal(17, reset_less=True)
+                    self.comb += s_next.eq(r + self.header[i*16:(i+1)*16])
+                    r_next_eq = r_next.eq(Cat(s_next[:16]+s_next[16], Signal()))
+                    if (i%words_per_clock_cycle) != 0:
+                        self.comb += r_next_eq
+                    else:
+                        self.sync += If(~self.done, r_next_eq)
+                        n_cycles += 1
+                    s, r = s_next, r_next
+            self.comb += self.value.eq(~Cat(r[8:16], r[:8]))
 
-        if not skip_checksum:
-            n_cycles += 1
-        counter    = Signal(max=n_cycles+1)
-        counter_ce = Signal()
-        self.sync += If(counter_ce, counter.eq(counter + 1))
-        self.comb += counter_ce.eq(~self.done)
-        self.comb += self.done.eq(counter == n_cycles)
+            if not skip_checksum:
+                n_cycles += 1
+            counter    = Signal(max=n_cycles+1)
+            counter_ce = Signal()
+            self.sync += If(counter_ce, counter.eq(counter + 1))
+            self.comb += counter_ce.eq(~self.done)
+            self.comb += self.done.eq(counter == n_cycles)
+        else:
+            self.comb += self.done.eq(1)
+            self.comb += self.value.eq(0)
 
 # IP TX --------------------------------------------------------------------------------------------
 
@@ -91,14 +94,14 @@ class LiteEthIPV4Packetizer(Packetizer):
 
 
 class LiteEthIPTX(Module):
-    def __init__(self, mac_address, ip_address, arp_table, dw=8):
+    def __init__(self, mac_address, ip_address, arp_table, dw=8, dummy_checksum=False):
         self.sink   = sink   = stream.Endpoint(eth_ipv4_user_description(dw))
         self.source = source = stream.Endpoint(eth_mac_description(dw))
         self.target_unreachable = Signal()
 
         # # #
 
-        self.submodules.checksum = checksum = LiteEthIPV4Checksum(skip_checksum=True)
+        self.submodules.checksum = checksum = LiteEthIPV4Checksum(skip_checksum=True, dummy=dummy_checksum)
         self.comb += checksum.ce.eq(sink.valid)
         self.comb += checksum.reset.eq(source.valid & source.last & source.ready)
 
@@ -184,7 +187,7 @@ class LiteEthIPV4Depacketizer(Depacketizer):
 
 
 class LiteEthIPRX(Module):
-    def __init__(self, mac_address, ip_address, dw=8):
+    def __init__(self, mac_address, ip_address, dw=8, dummy_checksum=False):
         self.sink   = sink   = stream.Endpoint(eth_mac_description(dw))
         self.source = source = stream.Endpoint(eth_ipv4_user_description(dw))
 
@@ -193,7 +196,7 @@ class LiteEthIPRX(Module):
         self.submodules.depacketizer = depacketizer = LiteEthIPV4Depacketizer(dw)
         self.comb += sink.connect(depacketizer.sink)
 
-        self.submodules.checksum = checksum = LiteEthIPV4Checksum(skip_checksum=False)
+        self.submodules.checksum = checksum = LiteEthIPV4Checksum(skip_checksum=False, dummy=dummy_checksum)
         self.comb += [
             checksum.header.eq(depacketizer.header),
             checksum.reset.eq(~(depacketizer.source.valid)),
@@ -254,9 +257,9 @@ class LiteEthIPRX(Module):
 # IP -----------------------------------------------------------------------------------------------
 
 class LiteEthIP(Module):
-    def __init__(self, mac, mac_address, ip_address, arp_table, dw=8):
-        self.submodules.tx = tx = LiteEthIPTX(mac_address, ip_address, arp_table, dw=dw)
-        self.submodules.rx = rx = LiteEthIPRX(mac_address, ip_address, dw=dw)
+    def __init__(self, mac, mac_address, ip_address, arp_table, dw=8, dummy_checksum=False):
+        self.submodules.tx = tx = LiteEthIPTX(mac_address, ip_address, arp_table, dw=dw, dummy_checksum=dummy_checksum)
+        self.submodules.rx = rx = LiteEthIPRX(mac_address, ip_address, dw=dw, dummy_checksum=dummy_checksum)
         mac_port = mac.crossbar.get_port(ethernet_type_ip, dw)
         self.comb += [
             tx.source.connect(mac_port.sink),

@@ -140,7 +140,7 @@ def main(args):
 
     r = mdioc.read_reg(phyaddr, R.EXT_PHY_SPECIFIC_STATUS)
     print(r)
-    if args.reconfig:
+    if args.set_hwconfig:
         r.hw_config = args.hwconfig
         mdioc.write_reg(phyaddr, r)
         mdioc.reset(phyaddr)
@@ -148,12 +148,19 @@ def main(args):
 
         print(mdioc.read_reg(phyaddr, R.PHY_SPECIFIC_STATUS_COPPER))
 
+    if args.set_rx_delay is not None:
+        r = mdioc.read_reg(phyaddr, R.EXT_PHY_SPECIFIC_CTRL)
+        r.rgmii_rx_timing_ctrl = args.set_rx_delay
+        mdioc.write_reg(phyaddr, r)
+        mdioc.reset(phyaddr)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--phyaddr", default=0, type=lambda x: int(x, 0), help="PHY address.")
     parser.add_argument("--dump", action="store_true", help="Dump and decode MDIO registers.")
-    parser.add_argument("--reconfig", action="store_true", help="Reconfigure HW_CONFIG mode.")
+    parser.add_argument("--set-hwconfig", action="store_true", help="Reconfigure HW_CONFIG mode.")
     parser.add_argument("--hwconfig", default=0b1111, type=lambda x: int(x, 0), help="HW_CONFIG mode.")
+    parser.add_argument("--set-rx-delay", default=None, type=bool, help="Reconfigure RX delay mode.")
     args = parser.parse_args()
     main(args)
