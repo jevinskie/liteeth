@@ -28,8 +28,8 @@ class MDIOClient:
 
     def __init__(self, bus: RemoteClient):
         self.bus = bus
-        self.w = bus.regs.ethphy_mdio_w
-        self.r = bus.regs.ethphy_mdio_r
+        self.w = bus.regs.mdio_w
+        self.r = bus.regs.mdio_r
 
     @staticmethod
     def reverse_bits(word, nbits):

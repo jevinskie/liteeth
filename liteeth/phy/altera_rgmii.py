@@ -23,9 +23,6 @@ class LiteEthPHYRGMIITX(Module):
 
         # # #
 
-        tx_ctl_obuf  = Signal()
-        tx_data_obuf = Signal(4)
-
         self.specials += [
             DDROutput(
                 clk = ClockSignal("eth_tx_delayed"),
