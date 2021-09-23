@@ -29,4 +29,4 @@ class LiteEthUDPIPCore(LiteEthIPCore):
         ip_address = convert_ip(ip_address)
         LiteEthIPCore.__init__(self, phy, mac_address, ip_address, clk_freq, dw=dw,
                                with_icmp=with_icmp, with_sim_hack=with_sim_hack, dummy_checksum=dummy_checksum)
-        self.submodules.tcp = LiteEthUDP(self.ip, ip_address, dw=dw)
+        self.submodules.udp = LiteEthUDP(self.ip, ip_address, dw=dw)

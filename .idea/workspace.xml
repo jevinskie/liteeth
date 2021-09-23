@@ -4,50 +4,25 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="be4e0931-01f3-4262-9d81-27d45c9a6e5b" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/bench/test_udp_streamer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CONTRIBUTORS" beforeDir="false" afterPath="$PROJECT_DIR$/CONTRIBUTORS" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bench/arty.py" beforeDir="false" afterPath="$PROJECT_DIR$/bench/arty.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/liteeth/common.py" beforeDir="false" afterPath="$PROJECT_DIR$/liteeth/common.py" afterDir="false" />
+    <list default="true" id="7cf2e62e-e1ee-4ca2-8b65-05c9bdfa5b57" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/io-delay-tests/altera_max10_dev_kit.py" beforeDir="false" afterPath="$PROJECT_DIR$/io-delay-tests/altera_max10_dev_kit.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/liteeth/core/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/liteeth/core/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/liteeth/core/arp.py" beforeDir="false" afterPath="$PROJECT_DIR$/liteeth/core/arp.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/liteeth/core/icmp.py" beforeDir="false" afterPath="$PROJECT_DIR$/liteeth/core/icmp.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/liteeth/core/ip.py" beforeDir="false" afterPath="$PROJECT_DIR$/liteeth/core/ip.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/liteeth/core/udp.py" beforeDir="false" afterPath="$PROJECT_DIR$/liteeth/core/udp.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/liteeth/frontend/etherbone.py" beforeDir="false" afterPath="$PROJECT_DIR$/liteeth/frontend/etherbone.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/liteeth/frontend/stream.py" beforeDir="false" afterPath="$PROJECT_DIR$/liteeth/frontend/stream.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="FileTemplateManagerImpl">
-    <option name="RECENT_TEMPLATES">
-      <list>
-        <option value="Python Script" />
-      </list>
-    </option>
-  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitSEFilterConfiguration">
-    <file-type-list>
-      <filtered-out-file-type name="LOCAL_BRANCH" />
-      <filtered-out-file-type name="REMOTE_BRANCH" />
-      <filtered-out-file-type name="TAG" />
-      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
-    </file-type-list>
-  </component>
-  <component name="ProjectId" id="1uBJwSEbWKRQ1ItIlqKwSOAp4MU" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectId" id="1yYJaRJT1hyOZGlHkRdazFqtKKo" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
-    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
@@ -56,86 +31,36 @@
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
-    <property name="restartRequiresConfirmation" value="false" />
-    <property name="settings.editor.selected.configurable" value="vcs.Git" />
-  </component>
-  <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/stream-test" />
-    </key>
+    <property name="settings.editor.selected.configurable" value="MTHome" />
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="be4e0931-01f3-4262-9d81-27d45c9a6e5b" name="Default Changelist" comment="" />
-      <created>1624133286990</created>
+      <changelist id="7cf2e62e-e1ee-4ca2-8b65-05c9bdfa5b57" name="Changes" comment="" />
+      <created>1632422651545</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1624133286990</updated>
-      <workItem from="1624133288227" duration="7000" />
-      <workItem from="1624150263260" duration="1102000" />
-      <workItem from="1624242889503" duration="599000" />
-      <workItem from="1624252112267" duration="7511000" />
-      <workItem from="1629520800909" duration="78000" />
-      <workItem from="1631327462563" duration="89000" />
-      <workItem from="1631327612430" duration="631000" />
-      <workItem from="1631412116299" duration="685000" />
-      <workItem from="1631425039264" duration="2517000" />
-      <workItem from="1631491944387" duration="78000" />
-      <workItem from="1631492037563" duration="599000" />
-      <workItem from="1631554449651" duration="2538000" />
-      <workItem from="1631579834129" duration="746000" />
-      <workItem from="1631581652039" duration="6027000" />
-      <workItem from="1631591516432" duration="6115000" />
-      <workItem from="1631754164762" duration="11571000" />
-      <workItem from="1632027634340" duration="6240000" />
-      <workItem from="1632085578544" duration="5228000" />
-      <workItem from="1632125382749" duration="1209000" />
-      <workItem from="1632290153176" duration="9733000" />
+      <updated>1632422651545</updated>
+      <workItem from="1632422653474" duration="193000" />
+      <workItem from="1632422860259" duration="1653000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
-  <component name="Vcs.Log.Tabs.Properties">
-    <option name="TAB_STATES">
-      <map>
-        <entry key="MAIN">
-          <value>
-            <State />
-          </value>
-        </entry>
-      </map>
-    </option>
-    <option name="oldMeFiltersMigrated" value="true" />
-  </component>
-  <component name="VcsManagerConfiguration">
-    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-  </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/liteeth/phy/s6rgmii.py</url>
-          <line>247</line>
+          <url>file://$PROJECT_DIR$/io-delay-tests/altera_max10_dev_kit.py</url>
+          <line>283</line>
           <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/io-delay-tests/altera_max10_dev_kit.py</url>
-          <line>8</line>
-          <option name="timeStamp" value="2" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/io-delay-tests/altera_max10_dev_kit.py</url>
-          <line>83</line>
-          <option name="timeStamp" value="4" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/liteeth$iodelaytest.coverage" NAME="iodelaytest Coverage Results" MODIFIED="1632382072338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/io-delay-tests" />
-    <SUITE FILE_PATH="coverage/liteeth$liteeth_mdio.coverage" NAME="liteeth_mdio Coverage Results" MODIFIED="1631589732184" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../litex-boards/litex_boards/targets" />
+    <SUITE FILE_PATH="coverage/liteeth$io_delay_test.coverage" NAME="io-delay-test Coverage Results" MODIFIED="1632424017530" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/io-delay-tests" />
   </component>
 </project>

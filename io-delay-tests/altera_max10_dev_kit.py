@@ -11,6 +11,7 @@ import argparse
 
 from migen import *
 from migen.genlib.cdc import ClockBuffer
+from migen.genlib.misc import WaitTimer
 from migen.fhdl.tools import list_clock_domains, list_clock_domains_expr
 
 from litex_boards.platforms import altera_max10_dev_kit
@@ -25,6 +26,7 @@ from liteeth.phy import LiteEthPHY
 from liteeth.phy.common import LiteEthPHYMDIO
 from liteeth.phy.mii import LiteEthPHYMII
 from liteeth.phy.altera_rgmii import LiteEthPHYRGMII
+from liteeth.core import LiteEthUDPIPCore
 
 from litescope import LiteScopeAnalyzer
 
@@ -101,15 +103,15 @@ class BaseSoC(SoCCore):
         # Jtagbone ---------------------------------------------------------------------------------
         self.add_jtagbone()
 
-        two_led_pads = Cat(platform.request("user_led"), platform.request("user_led"))
-        self.submodules.leds = LedChaser(
-            pads=two_led_pads,
-            sys_clk_freq=sys_clk_freq)
-
-        sink_led_pads = Record([
-            ("led2", platform.request("user_led")),
-            ("led3", platform.request("user_led")),
-        ], "two_sink_leds")
+        # two_led_pads = Cat(platform.request("user_led"), platform.request("user_led"))
+        # self.submodules.leds = LedChaser(
+        #     pads=two_led_pads,
+        #     sys_clk_freq=sys_clk_freq)
+        #
+        # sink_led_pads = Record([
+        #     ("led2", platform.request("user_led")),
+        #     ("led3", platform.request("user_led")),
+        # ], "two_sink_leds")
 
         # Ethernet MDIO
         self.submodules.mdio = LiteEthPHYMDIO(self.platform.request("eth_mdio"))
@@ -129,6 +131,16 @@ class BaseSoC(SoCCore):
         self.ethphy1 = ClockDomainsRenamer({"eth_rx": "ethphy1_rx",
                                             "eth_tx": "ethphy1_tx",
                                             "eth_tx_delayed": "ethphy1_tx_delayed"})(self.ethphy1)
+
+        self.submodules.ethcore1 = LiteEthUDPIPCore(
+            phy         = self.ethphy1,
+            mac_address = 0x10e2d5000001,
+            ip_address  = "192.168.44.51",
+            clk_freq    = self.clk_freq,
+            dummy_checksum = False)
+        self.ethcore1 = ClockDomainsRenamer({"eth_rx": "ethphy1_rx",
+                                            "eth_tx": "ethphy1_tx",
+                                            "eth_tx_delayed": "ethphy1_tx_delayed"})(self.ethcore1)
 
         eth_rx_clk = getattr(self.ethphy1, "crg", self.ethphy1).cd_eth_rx.clk
         eth_tx_clk = getattr(self.ethphy1, "crg", self.ethphy1).cd_eth_tx.clk
@@ -261,9 +273,13 @@ set_false_path \
         analyzer_signals = {
             *self.ethphy1.rx._signals,
             self.ethphy1.crg.rx_cnt, self.ethphy1.crg.tx_cnt,
+            # *self.ethcore1.arp.rx._signals, *self.ethcore1.arp.tx._signals,
+            self.ethcore1.arp.rx.source.payload.ip_address, self.ethcore1.arp.rx.source.payload.mac_address,
+            self.ethcore1.arp.rx.sink.payload.sender_mac, self.ethcore1.arp.rx.sink.payload.target_mac,
         }
         analyzer_signals_denylist = {
             self.ethphy1.clock_pads, eth_pads1.tx_data,  self.ethphy1.rx.rx_data, eth_pads1.tx_ctl,
+            self.ethcore1.arp.rx.depacketizer.header, self.ethcore1.arp.tx.packetizer.header,
         }
         analyzer_signals -= analyzer_signals_denylist
         analyzer_signals = list(analyzer_signals)
@@ -280,11 +296,46 @@ set_false_path \
         # self.comb += sink_led_pads.led2.eq(led2)
         # self.comb += sink_led_pads.led3.eq(~led2)
         self.submodules.analyzer = LiteScopeAnalyzer(analyzer_signals,
-            depth        = 256,
+            depth        = 128,
             clock_domain = "ethphy1_rx",
             register     = True,
             csr_csv      = "analyzer.csv")
 
+
+        # UDP Streamer -----------------------------------------------------------------------------
+        from liteeth.frontend.stream import LiteEthUDPStreamer
+        self.submodules.udp_streamer = udp_streamer = LiteEthUDPStreamer(
+            udp        = self.ethcore1.udp,
+            ip_address = "192.168.1.100",
+            udp_port   = 6000,
+        )
+
+        # Leds -------------------------------------------------------------------------------------
+        leds_pads = platform.request_all("user_led")
+
+        # Led Chaser (Default).
+        chaser_leds = Signal(len(leds_pads))
+        self.submodules.leds = LedChaser(
+            pads         = chaser_leds,
+            sys_clk_freq = sys_clk_freq)
+
+        # Led Control from UDP Streamer RX.
+        udp_leds = Signal(len(leds_pads))
+        self.comb += udp_streamer.source.ready.eq(1)
+        self.sync += If(udp_streamer.rx.source.valid,
+            udp_leds.eq(udp_streamer.source.data)
+        )
+
+        # Led Mux: Switch to received UDP value for 1s then switch back to Led Chaser.
+        self.submodules.leds_timer = leds_timer = WaitTimer(sys_clk_freq)
+        self.comb += [
+            leds_timer.wait.eq(~udp_streamer.rx.source.valid), # Reload Timer on new UDP value.
+            If(leds_timer.done,
+                leds_pads.eq(chaser_leds)
+            ).Else(
+                leds_pads.eq(udp_leds)
+            )
+        ]
 
 # Build --------------------------------------------------------------------------------------------
 
