@@ -272,10 +272,12 @@ set_false_path \
         # Analyzer ---------------------------------------------------------------------------------
         analyzer_signals = {
             *self.ethphy1.rx._signals,
+            self.ethphy1.tx.sink,
             self.ethphy1.crg.rx_cnt, self.ethphy1.crg.tx_cnt,
             # *self.ethcore1.arp.rx._signals, *self.ethcore1.arp.tx._signals,
             self.ethcore1.arp.rx.source.payload.ip_address, self.ethcore1.arp.rx.source.payload.mac_address,
             self.ethcore1.arp.rx.sink.payload.sender_mac, self.ethcore1.arp.rx.sink.payload.target_mac,
+            self.ethcore1.arp.tx.sink.payload.ip_address, self.ethcore1.arp.tx.sink.payload.mac_address,
         }
         analyzer_signals_denylist = {
             self.ethphy1.clock_pads, eth_pads1.tx_data,  self.ethphy1.rx.rx_data, eth_pads1.tx_ctl,
@@ -296,7 +298,7 @@ set_false_path \
         # self.comb += sink_led_pads.led2.eq(led2)
         # self.comb += sink_led_pads.led3.eq(~led2)
         self.submodules.analyzer = LiteScopeAnalyzer(analyzer_signals,
-            depth        = 128,
+            depth        = 256,
             clock_domain = "ethphy1_rx",
             register     = True,
             csr_csv      = "analyzer.csv")
