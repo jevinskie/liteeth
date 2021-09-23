@@ -298,11 +298,11 @@ set_false_path \
         #         self.comb += led2.eq(led2 ^ sig)
         # self.comb += sink_led_pads.led2.eq(led2)
         # self.comb += sink_led_pads.led3.eq(~led2)
-        self.submodules.analyzer = LiteScopeAnalyzer(analyzer_signals,
-            depth        = 256-64,
-            clock_domain = "ethphy1_rx",
-            register     = True,
-            csr_csv      = "analyzer.csv")
+        # self.submodules.analyzer = LiteScopeAnalyzer(analyzer_signals,
+        #     depth        = 256-64,
+        #     clock_domain = "ethphy1_rx",
+        #     register     = True,
+        #     csr_csv      = "analyzer.csv")
 
 
         # UDP Streamer -----------------------------------------------------------------------------

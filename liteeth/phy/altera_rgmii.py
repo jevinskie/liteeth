@@ -108,6 +108,14 @@ class LiteEthPHYRGMIICRG(Module, AutoCSR):
         self.rxclkbuf = ClockBuffer(cd_eth_rx)
         self.specials += self.rxclkbuf
 
+        # self.comb += clock_pads.gtx.eq(ClockSignal("eth_tx_delayed"))
+        self.gtx_ddr_ioe = DDROutput(
+            clk = ClockSignal("eth_tx_delayed"),
+            i1  = 1,
+            i2  = 0,
+            o   = clock_pads.gtx)
+        self.specials += self.gtx_ddr_ioe
+
         # Clock counters (debug)
         self.rx_cnt = Signal(8)
         self.tx_cnt = Signal(8)
