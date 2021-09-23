@@ -25,7 +25,7 @@ class LiteEthPHYRGMIITX(Module):
 
         self.specials += [
             DDROutput(
-                clk = ClockSignal("eth_tx_delayed"),
+                clk = ClockSignal("eth_tx"),
                 i1  = sink.valid,
                 i2  = sink.valid,
                 o   = pads.tx_ctl),
@@ -33,7 +33,7 @@ class LiteEthPHYRGMIITX(Module):
         for i in range(4):
             self.specials += [
                 DDROutput(
-                    clk = ClockSignal("eth_tx_delayed"),
+                    clk = ClockSignal("eth_tx"),
                     i1  = sink.data[i],
                     i2  = sink.data[4 + i],
                     o   = pads.tx_data[i]),

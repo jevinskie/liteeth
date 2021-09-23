@@ -5,13 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7cf2e62e-e1ee-4ca2-8b65-05c9bdfa5b57" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/liteeth.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/runConfigurations/io_delay_test.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/io-delay-tests/altera_max10_dev_kit.py" beforeDir="false" afterPath="$PROJECT_DIR$/io-delay-tests/altera_max10_dev_kit.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/liteeth/phy/altera_rgmii.py" beforeDir="false" afterPath="$PROJECT_DIR$/liteeth/phy/altera_rgmii.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,7 +43,7 @@
       <option name="presentableId" value="Default" />
       <updated>1632422651545</updated>
       <workItem from="1632422653474" duration="193000" />
-      <workItem from="1632422860259" duration="4670000" />
+      <workItem from="1632422860259" duration="6546000" />
     </task>
     <servers />
   </component>
@@ -70,7 +66,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/io-delay-tests/altera_max10_dev_kit.py</url>
-          <line>285</line>
+          <line>286</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
       </breakpoints>
