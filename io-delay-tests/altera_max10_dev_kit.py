@@ -130,15 +130,22 @@ class BaseSoC(SoCCore):
                                             "eth_tx": "ethphy1_tx",
                                             "eth_tx_delayed": "ethphy1_tx_delayed"})(self.ethphy1)
 
+        eth_rx_clk = getattr(self.ethphy1, "crg", self.ethphy1).cd_eth_rx.clk
+        eth_tx_clk = getattr(self.ethphy1, "crg", self.ethphy1).cd_eth_tx.clk
+        self.platform.add_period_constraint(eth_rx_clk, 1e9/self.ethphy1.rx_clk_freq)
+        self.platform.add_period_constraint(eth_tx_clk, 1e9/self.ethphy1.tx_clk_freq)
+        self.platform.add_false_path_constraints(self.crg.cd_sys.clk, eth_rx_clk, eth_tx_clk)
+        if hasattr(self.ethphy1, 'clock_pads'):
+            self.platform.associate_clock_and_pad(eth_rx_clk, self.ethphy1.clock_pads.rx)
+            self.platform.associate_clock_and_pad(eth_tx_clk, self.ethphy1.clock_pads.tx)
 
         self.platform.toolchain.additional_qsf_commands.append('''
-set_instance_assignment -name DUAL_PURPOSE_CLOCK_PIN_DELAY 11 -to eth_clocks_rx_1
-# set_instance_assignment -name PAD_TO_CORE_DELAY 6 -to eth_clocks_rx_1
-set_instance_assignment -name PAD_TO_CORE_DELAY 0 -to eth_rx_ctl
+set_instance_assignment -name DUAL_PURPOSE_CLOCK_PIN_DELAY 8 -to eth_clocks_rx_1
+set_instance_assignment -name PAD_TO_CORE_DELAY 6 -to eth_rx_ctl
 set_instance_assignment -name PAD_TO_CORE_DELAY 6 -to eth_rx_data_1[0]
-set_instance_assignment -name PAD_TO_CORE_DELAY 3 -to eth_rx_data_1[1]
-set_instance_assignment -name PAD_TO_CORE_DELAY 2 -to eth_rx_data_1[2]
-set_instance_assignment -name PAD_TO_CORE_DELAY 4 -to eth_rx_data_1[3]
+set_instance_assignment -name PAD_TO_CORE_DELAY 6 -to eth_rx_data_1[1]
+set_instance_assignment -name PAD_TO_CORE_DELAY 6 -to eth_rx_data_1[2]
+set_instance_assignment -name PAD_TO_CORE_DELAY 6 -to eth_rx_data_1[3]
 ''')
         self.platform.toolchain.additional_sdc_commands.append('''
 # set_input_delay -add_delay  -clock [get_clocks {main_ethphy1_clkbuf_cd_ethphy1_rx_clk_out}]  -13.5 [get_nodes {eth_clocks_rx_1}]
@@ -252,31 +259,31 @@ set_false_path \
 
         # Analyzer ---------------------------------------------------------------------------------
         analyzer_signals = {
-            *self.ethphy1._signals,
+            *self.ethphy1.rx._signals,
             self.ethphy1.crg.rx_cnt, self.ethphy1.crg.tx_cnt,
         }
         analyzer_signals_denylist = {
-            self.ethphy1.clock_pads, eth_pads1.tx_data, eth_pads1.tx_ctl,
+            self.ethphy1.clock_pads, eth_pads1.tx_data,  self.ethphy1.rx.rx_data, eth_pads1.tx_ctl,
         }
         analyzer_signals -= analyzer_signals_denylist
         analyzer_signals = list(analyzer_signals)
-        led2 = Signal()
-        for sig in analyzer_signals:
-            if isinstance(sig, Record):
-                for subsig in sig.flatten():
-                    self.comb += led2.eq(led2 ^ subsig)
-            elif len(sig) > 1:
-                for i in range(len(sig)):
-                    self.comb += led2.eq(led2 ^ sig[i])
-            else:
-                self.comb += led2.eq(led2 ^ sig)
-        self.comb += sink_led_pads.led2.eq(led2)
-        self.comb += sink_led_pads.led3.eq(~led2)
-        # self.submodules.analyzer = LiteScopeAnalyzer(analyzer_signals,
-        #     depth        = 256,
-        #     clock_domain = "ethphy1_rx",
-        #     register     = True,
-        #     csr_csv      = "analyzer.csv")
+        # led2 = Signal()
+        # for sig in analyzer_signals:
+        #     if isinstance(sig, Record):
+        #         for subsig in sig.flatten():
+        #             self.comb += led2.eq(led2 ^ subsig)
+        #     elif len(sig) > 1:
+        #         for i in range(len(sig)):
+        #             self.comb += led2.eq(led2 ^ sig[i])
+        #     else:
+        #         self.comb += led2.eq(led2 ^ sig)
+        # self.comb += sink_led_pads.led2.eq(led2)
+        # self.comb += sink_led_pads.led3.eq(~led2)
+        self.submodules.analyzer = LiteScopeAnalyzer(analyzer_signals,
+            depth        = 256,
+            clock_domain = "ethphy1_rx",
+            register     = True,
+            csr_csv      = "analyzer.csv")
 
 
 # Build --------------------------------------------------------------------------------------------
