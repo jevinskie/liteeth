@@ -49,8 +49,11 @@ class LiteEthPHYRGMIIRX(Module):
 
         self.rx_ctl = rx_ctl         = Signal(2)
         self.rx_ctl_reg = rx_ctl_reg     = Signal(2)
+        self.rx_ctl_delay_h = rx_ctl_delay_h = Signal()
         self.rx_data = rx_data        = Signal(8)
+        self.rx_data_delay_h = rx_data_delay_h = Signal(4)
         self.rx_data_reg = rx_data_reg    = Signal(8)
+
 
         self.specials += [
             DDRInput(
@@ -60,7 +63,12 @@ class LiteEthPHYRGMIIRX(Module):
                 o2  = rx_ctl[1]
             )
         ]
-        self.sync += rx_ctl_reg.eq(rx_ctl)
+        self.sync += [
+            rx_ctl_delay_h.eq(rx_ctl[0]),
+            rx_ctl_reg[0].eq(rx_ctl_delay_h),
+            rx_ctl_reg[1].eq(rx_ctl[1]),
+        ]
+
         for i in range(4):
             self.specials += [
                 DDRInput(
@@ -70,7 +78,11 @@ class LiteEthPHYRGMIIRX(Module):
                     o2  = rx_data[i+4]
                 )
             ]
-        self.sync += rx_data_reg.eq(rx_data)
+            self.sync += [
+                rx_data_delay_h[i].eq(rx_data[i]),
+                rx_data_reg[i].eq(rx_data_delay_h[i]),
+                rx_data_reg[i+4].eq(rx_data[i+4]),
+            ]
 
         rx_ctl_reg_d = Signal(2)
         self.sync += rx_ctl_reg_d.eq(rx_ctl_reg)
