@@ -1,0 +1,11 @@
+{signal: [
+  {name: "rx_clk_phy", wave: "P.......", period: 4},
+  {name: "rx_dat", wave: "x66666666666666x", data: ["D", "D", "F", "F", "F", "F", "F", "F", "C", "8", "E", "A", "C", "4"], period: 2, phase: 2},
+  {name: "rx_clk_fpga", wave: "P.......", period: 4, phase: -1},
+  {name: "rx_reg_ddr", wave: "55555555555555x", data: ["D", "D", "F", "F", "F", "F", "F", "F", "C", "8", "E", "A", "C", "4"], period: 2, phase: -1},
+  {name: "rx_reg_byte", wave: "77777777777777x", data: ["XD", "DD", "DF", "FF", "FF", "FF", "FF", "FF", "FC", "8C", "8E", "AE", "AC", "4C"], period: 2, phase: -1},
+  {name: "rx_reg_seen", wave: "x999999999x", data: ["DF", "FF", "FF", "FC", "8E", "AC", "44"], period: 4, phase: -1},
+  {name: "rx_dat_seen", wave: "xxxx44444444x", data: ["F", "D", "F", "F", "F", "F", "F", "F", "8", "C", "A", "E", "4", "C"], period: 2, phase: 2},
+
+]}
+
