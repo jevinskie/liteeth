@@ -6,8 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="7cf2e62e-e1ee-4ca2-8b65-05c9bdfa5b57" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/io-delay-tests/altera_max10_dev_kit.py" beforeDir="false" afterPath="$PROJECT_DIR$/io-delay-tests/altera_max10_dev_kit.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/liteeth/phy/altera_rgmii.py" beforeDir="false" afterPath="$PROJECT_DIR$/liteeth/phy/altera_rgmii.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/liteeth/frontend/etherbone.py" beforeDir="false" afterPath="$PROJECT_DIR$/liteeth/frontend/etherbone.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,7 +51,7 @@
       <updated>1632422651545</updated>
       <workItem from="1632422653474" duration="193000" />
       <workItem from="1632422860259" duration="9908000" />
-      <workItem from="1632440489676" duration="112000" />
+      <workItem from="1632440489676" duration="4870000" />
     </task>
     <servers />
   </component>
@@ -71,18 +70,7 @@
     </option>
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/io-delay-tests/altera_max10_dev_kit.py</url>
-          <line>57</line>
-          <option name="timeStamp" value="3" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
-  </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/liteeth$io_delay_test.coverage" NAME="io-delay-test Coverage Results" MODIFIED="1632438623498" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/io-delay-tests" />
+    <SUITE FILE_PATH="coverage/liteeth$io_delay_test.coverage" NAME="io-delay-test Coverage Results" MODIFIED="1632444916216" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/io-delay-tests" />
   </component>
 </project>
