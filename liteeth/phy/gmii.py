@@ -57,10 +57,13 @@ class LiteEthPHYGMIICRG(Module, AutoCSR):
 
         if not model:
             # RX clock: GMII, MII Use PHY clock_pads.rx as eth_rx_clk.
-            self.specials += Instance("BUFG",
-                i_I = clock_pads.rx,
-                o_O = ClockSignal("eth_rx"),
-            )
+            if False:
+                self.specials += Instance("BUFG",
+                    i_I = clock_pads.rx,
+                    o_O = ClockSignal("eth_rx"),
+                )
+            else:
+                self.comb += ClockSignal("eth_rx").eq(clock_pads.rx)
 
             # TX clock: GMII: Drive clock_pads.gtx, clock_pads.tx unused.
             #           MII : Use PHY clock_pads.tx as eth_tx_clk, do not drive clock_pads.gtx.
@@ -73,10 +76,13 @@ class LiteEthPHYGMIICRG(Module, AutoCSR):
                    eth_tx_clk.eq(clock_pads.rx)
                 )
             ]
-            self.specials += Instance("BUFG",
-                i_I = eth_tx_clk,
-                o_O = ClockSignal("eth_tx"),
-            )
+            if False:
+                self.specials += Instance("BUFG",
+                    i_I = eth_tx_clk,
+                    o_O = ClockSignal("eth_tx"),
+                )
+            else:
+                self.comb += ClockSignal("eth_tx").eq(eth_tx_clk)
 
             # Reset
             self.reset = reset = Signal()

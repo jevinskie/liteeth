@@ -19,6 +19,7 @@ setup(
     entry_points={
         "console_scripts": [
             "liteeth_gen=liteeth.gen:main",
+            "liteeth_mdio=liteeth.software.liteeth_mdio:main",
         ],
     },
 )
