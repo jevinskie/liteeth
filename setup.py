@@ -16,9 +16,13 @@ setup(
     python_requires="~=3.6",
     packages=find_packages(exclude=("test*", "sim*", "doc*", "examples*")),
     include_package_data=True,
+    install_requires=[
+        "attrs",
+    ],
     entry_points={
         "console_scripts": [
             "liteeth_gen=liteeth.gen:main",
+            "liteeth_mdio=liteeth.software.liteeth_mdio:main",
         ],
     },
 )
